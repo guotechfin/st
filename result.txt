@@ -1,0 +1,17 @@
+
+MACD in, 20 avg out:
+
+mean_profit: 260.163932
+win_lose_ratio: 32.105263
+win_lose_profit_ratio: 3.976897
+win_lose_stock_ratio: 46.835443
+max_win: 46.545652, max_lose: -9.935484
+
+
+MACD in, Avg2 5, 20:
+
+mean_profit: 599.153054
+win_lose_ratio: 48.863636
+win_lose_profit_ratio: 2.536521
+win_lose_stock_ratio: 57.692308
+max_win: 139.083376, max_lose: -46.000000

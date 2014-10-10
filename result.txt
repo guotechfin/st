@@ -15,3 +15,12 @@ win_lose_ratio: 48.863636
 win_lose_profit_ratio: 2.536521
 win_lose_stock_ratio: 57.692308
 max_win: 139.083376, max_lose: -46.000000
+
+In Market:  MACD (12, 26, 9) Bottom Deviation: price range -10%~0%, dif range 50%, search last 3 cross
+Out Market:  BreakOut 10 days, Down
+
+mean_profit: 498.554337
+win_lose_ratio: 45.502646
+win_lose_profit_ratio: 2.605983
+win_lose_stock_ratio: 56.962025
+max_win: 79.740260, max_lose: -14.413681

@@ -2,10 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from matplotlib import pyplot
 
 from stocks import Util, Stocks, Stock
-from index import MACD, EMA, EMA2, Cross
+from index import MACD, EMA, EMA2, Cross, LastMaxMin
 from account import VirtualAccount
 
 
@@ -65,6 +64,7 @@ class Analyse(object):
                 in_market_stra.reset()
                 out_market_stra.reset()
                 market_status_in_market = False
+                hold_stock_days = 0
                 # 选定满足策略的入市时间
                 for time_, price in stock.iter_tick():
                     in_market_trigger = in_market_stra.update(price)
@@ -73,17 +73,26 @@ class Analyse(object):
                         if in_market_trigger:
                             account.buy_stock(stock_id, price[1], today = time_)  # close价格作为买入, 卖出价
                             market_status_in_market = True
+                            hold_stock_days = 0
                     else:
+                        if price: hold_stock_days += 1
                         if out_market_trigger:
-                            account.sell_stock(stock_id, price[1], today = time_)
+                            account.sell_stock(stock_id, price[1], today = time_, hold_stock_days = hold_stock_days)
                             market_status_in_market = False
+        self.show_trade_info(in_market_stra, out_market_stra, account)
+
+    def show_trade_info(self, in_market_stra, out_market_stra, account):
         print account
-        account.show()
+        print 'In Market: ', in_market_stra.name
+        print 'Out Market: ', out_market_stra.name
+        account.show_summarize()
+        #account.show_profit_pdf()
 
 
 # 某日单日涨幅 或跌幅
 class RaiseBigStra(object):
     def __init__(self, raise_value, raise_report = True):
+        self.name = '%s %s : %f%%' % ('Raise' if raise_report else 'Drop', 'In One Day', raise_value)
         self.raise_report = raise_report  # True: 上涨, False: 下跌
         self.raise_value = raise_value  # 幅度百分比
         self.reset()
@@ -97,17 +106,37 @@ class RaiseBigStra(object):
             o, c, h, l = price
             if self.old_price:
                 price_raise = 100*(c / float(self.old_price) - 1)
-                if self.raise_report and price_raise >= self.raise_value:
-                    in_market_trigger = True
-                elif not self.raise_report and price_raise <= self.raise_value:
+                if (self.raise_report and price_raise > self.raise_value) or (not self.raise_report and price_raise < self.raise_value):
                     in_market_trigger = True
             self.old_price = c
+        return in_market_trigger
+
+
+# 突破
+class BreakOutStra(object):
+    def __init__(self, break_days, break_up = True):
+        self.name = 'BreakOut %d days, %s' % (break_days, 'Up' if break_up else 'Down')
+        self.break_days = break_days
+        self.break_up = break_up     # True: 向上突破, False: 向下突破
+        self.reset()
+
+    def reset(self):
+        self.last_max_min = LastMaxMin(self.break_days, self.break_up)
+
+    def update(self, price):  # [open, close, high, low]
+        in_market_trigger = False
+        if price:
+            o, c, h, l = price
+            value = self.last_max_min.update(c)
+            if value and ((c > value and self.break_up) or (c < value and not self.break_up)):
+                in_market_trigger = True
         return in_market_trigger
 
 
 # 上穿, 下穿某日均线
 class AvgLineCrossStra(object):
     def __init__(self, avg_days, up_cross_report = True):
+        self.name = 'Average Line %d days, %s Cross' % (avg_days, 'Up' if up_cross_report else 'Down')
         self.avg_days = avg_days
         self.up_cross_report = up_cross_report  # True: 上穿, False: 下穿
         self.reset()
@@ -130,6 +159,7 @@ class AvgLineCrossStra(object):
 
 class TwoAvgLineCrossStra(object):
     def __init__(self, short_days, long_days, up_cross_report = True):
+        self.name = 'Average Lines %d days and %d days, %s Cross' % (short_days, long_days, 'Gold' if up_cross_report else 'Dead')
         self.ema2_param = (short_days, long_days)
         self.up_cross_report = up_cross_report
         self.reset()
@@ -151,6 +181,8 @@ class TwoAvgLineCrossStra(object):
 # MACD背离
 class MacdDeviationStra(object):
     def __init__(self, gold_cross_report = True, short_days = 12, long_days = 26, dif_days = 9, price_dev = (-0.1, 0), dif_dev = 0.5, last_dif = 3):
+        self.name = 'MACD (%d, %d, %d) %s Deviation: price range %d%%~%d%%, dif range %d%%, search last %d cross' % (short_days, long_days, dif_days,
+                    'Bottom' if gold_cross_report else 'Top', price_dev[0]*100, price_dev[1]*100, dif_dev*100, last_dif)
         self.macd_para = (short_days, long_days, dif_days)
         self.gold_cross_report = gold_cross_report
         self.price_dev = price_dev
@@ -228,6 +260,7 @@ if __name__ == '__main__':
         print len(result_time), len(result_time_1)
         print result_time_1
         if False:
+            from matplotlib import pyplot
             pyplot.figure()
             pyplot.plot(result[0], '*-')
             pyplot.plot(result[1], 'r*-')
@@ -238,8 +271,9 @@ if __name__ == '__main__':
         in_stra = MacdDeviationStra()
         #in_stra = AvgLineCrossStra(20, up_cross_report = True)
         #in_stra = TwoAvgLineCrossStra(10, 60)
-        out_stra = TwoAvgLineCrossStra(5, 20, up_cross_report = False)
+        #out_stra = TwoAvgLineCrossStra(5, 20, up_cross_report = False)
         #out_stra = AvgLineCrossStra(20, up_cross_report = False)
+        out_stra = BreakOutStra(10, break_up = False)
         analyse.analyse_trade(in_stra, out_stra)
 
 

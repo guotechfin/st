@@ -96,7 +96,7 @@ class VirtualAccount(object):
         self.stocks[stock_id] = price
         self.history.append((today, 'buy', stock_id, price))
 
-    def sell_stock(self, stock_id, price, today):
+    def sell_stock(self, stock_id, price, today, hold_stock_days):
         if stock_id in self.stocks:
             profit = (float(price) / self.stocks[stock_id] - 1) * 100
             self.profit.append((today, stock_id, profit))
@@ -142,10 +142,14 @@ class VirtualAccount(object):
         s += 'max_win: %f, max_lose: %f\n' % (max_win_profit, max_lose_profit)
         return s
 
-    def show(self):
+    def show_profit_pdf(self):
         pl.hist(self.all_profit, 100)
         pl.grid()
         pl.show()
+
+    def show_summarize(self):
+        s = self.summarize()
+        print s
 
     def __str__(self):
         s = 'history:\n'
@@ -154,7 +158,6 @@ class VirtualAccount(object):
         s += '\nprofit:\n'
         for p in self.profit:
             s += '    %s\n' % str(p)
-        s += self.summarize()
         return s
 
 if __name__ == '__main__':

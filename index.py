@@ -82,6 +82,22 @@ class Cross(object):
                     self.cross = 'good'
         return cross
 
+class LastMaxMin(object):
+    def __init__(self, last_days, is_max = True):
+        self.is_max = is_max
+        self.last_days = last_days
+        self.days = 0
+        self.price_list = []
+
+    def update(self, price):
+        value = None
+        if not price is None:
+            self.days += 1
+            if self.days > self.last_days:  ### here????
+                if (self.direction_up and price > max(self.price_list)) or (not self.direction_up and price < min(self.price_list)):
+                    breakout = True
+                self.price_list.pop(0)
+            self.price_list.append(price)
 
 class MACD(object):
     def __init__(self, short_days = 12, long_days = 26, dif_days = 9):

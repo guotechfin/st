@@ -99,6 +99,24 @@ class LastMaxMin(object):
                 self.price_list.pop(0)
             self.price_list.append(price)
 
+class LastMaxMin(object):
+    def __init__(self, last_days, is_max = True):
+        self.last_days = last_days
+        self.max_min = max if is_max else min
+        self.days = 0
+        self.price_list = []
+
+    def update(self, price):
+        value = None
+        if price:
+            self.days += 1
+            if self.days > self.last_days:
+                value = self.max_min(self.price_list)
+                self.price_list.pop(0)
+            self.price_list.append(price)
+        return value
+
+
 class MACD(object):
     def __init__(self, short_days = 12, long_days = 26, dif_days = 9):
         self.ema1 = EMA(short_days)

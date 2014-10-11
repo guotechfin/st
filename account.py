@@ -1,7 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import pylab as pl
+import matplotlib.pyplot as plt
+import numpy as np
 from stocks import Util, Stocks
 
 
@@ -69,7 +70,7 @@ class Account(object):
                     if n == remain_number:
                         self.stocks[i] = None
                     else:
-                        self.stocks[i] = (sid, n - remain_number, buy_time, buy_price)                    
+                        self.stocks[i] = (sid, n - remain_number, buy_time, buy_price)
                     break
                 else:
                     total_sell_n += n
@@ -83,7 +84,7 @@ class Account(object):
             return (stock_id, price, total_sell_n)
         else:
             return None
-                
+
 
 class VirtualAccount(object):
     def __init__(self):
@@ -91,20 +92,22 @@ class VirtualAccount(object):
         self.history = []  # time, buy or sell, stock_id, price
         self.profit = []   # time, stock_id, profit
         self.all_profit = []  # profit
+        self.hold_days = []  # stock hold days of one trade
 
     def buy_stock(self, stock_id, price, today):
         self.stocks[stock_id] = price
         self.history.append((today, 'buy', stock_id, price))
 
-    def sell_stock(self, stock_id, price, today, hold_stock_days):
+    def sell_stock(self, stock_id, price, today, hold_stock_days = None):
         if stock_id in self.stocks:
             profit = (float(price) / self.stocks[stock_id] - 1) * 100
             self.profit.append((today, stock_id, profit))
             self.all_profit.append(profit)
             self.history.append((today, 'sell', stock_id, price))
+            if hold_stock_days: self.hold_days.append(hold_stock_days)
             del self.stocks[stock_id]
 
-    def summarize(self):
+    def summarize(self, test_period = None, trade_stocks = None):
         # 平均收益, 胜率, 盈亏比, 盈亏股票比, 频率, 最大回撤, 盈利直方图
         total_profit = 0
         win_num = lose_num = 0
@@ -135,20 +138,26 @@ class VirtualAccount(object):
         win_lose_stock_ratio = float(win_stock) / (win_stock + lose_stock) * 100
         mean_profit = total_profit / len(self.profit)
 
-        s = '\nmean_profit: %f\n' % total_profit
-        s += 'win_lose_ratio: %f\n' % win_lose_ratio
-        s += 'win_lose_profit_ratio: %f\n' % win_lose_profit_ratio
-        s += 'win_lose_stock_ratio: %f\n' % win_lose_stock_ratio
-        s += 'max_win: %f, max_lose: %f\n' % (max_win_profit, max_lose_profit)
+        s = '\ntotal_profit: %.2f, mean_profit: %.2f\n' % (total_profit, mean_profit)
+        s += 'mean_win_profit: %.2f, mean_lose_profit: %.2f\n' % (win_profit, lose_profit)
+        s += 'win_lose_ratio: %.2f\n' % win_lose_ratio
+        s += 'win_lose_profit_ratio: %.2f\n' % win_lose_profit_ratio
+        s += 'win_lose_stock_ratio: %.2f\n' % win_lose_stock_ratio
+        s += 'max_win: %.2f, max_lose: %.2f\n' % (max_win_profit, max_lose_profit)
+        s += 'trade_num: %d, avg_hold_days: %.2f\n' % (len(self.profit), np.mean(self.hold_days))
+        if test_period and trade_stocks:
+            days, day_start, day_end = test_period
+            s += 'trade_freq: %.2f%%, total_days: %d, total_stocks: %d\n' % (len(self.profit)*100/float(days)/trade_stocks, days, trade_stocks)
+            s += 'test from %s to %s\n' % (day_start, day_end)
         return s
 
     def show_profit_pdf(self):
-        pl.hist(self.all_profit, 100)
-        pl.grid()
-        pl.show()
+        plt.hist(self.all_profit, 100)
+        plt.grid(True)
+        plt.show()
 
-    def show_summarize(self):
-        s = self.summarize()
+    def show_summarize(self, test_period = None, trade_stocks = None):
+        s = self.summarize(test_period, trade_stocks)
         print s
 
     def __str__(self):

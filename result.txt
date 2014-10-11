@@ -24,3 +24,15 @@ win_lose_ratio: 45.502646
 win_lose_profit_ratio: 2.605983
 win_lose_stock_ratio: 56.962025
 max_win: 79.740260, max_lose: -14.413681
+
+In Market:  MACD (12, 26, 9) Bottom Deviation: price range -10%~0%, dif range 50%, search last 3 cross
+Out Market:  Stop Loss -3.0x ATR 20 days, Down
+
+mean_profit: 443.877821
+win_lose_ratio: 42.592593
+win_lose_profit_ratio: 2.325087
+win_lose_stock_ratio: 53.333333
+max_win: 135.826897, max_lose: -14.413681
+trade_num: 163, avg_hold_days: 38.37
+trade_freq: 0.14%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822

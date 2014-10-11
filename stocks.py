@@ -237,6 +237,9 @@ class Stocks(object):
             string += stock.__str__() + '\n'
         return string
 
+    def get_period(self):
+        return (len(Stock.price_time_list), Stock.price_time_list[0], Stock.price_time_list[-1])
+
     def iter_ticks(self):
         for time_ in Stock.price_time_list:
             tick_data = []
@@ -244,17 +247,16 @@ class Stocks(object):
                 tick_data.append(stock.get_tick(time_))
             yield (time_, tick_data)
 
-    def get_stock_list(self):
+    def get_stock_list(self, list_num = None):
         # sh, 600000~ 603993, 999999
         sh_special_list = ['999999']
         sh_list = [os.path.splitext(f)[0][2:] for f in os.listdir(Stock.PATH_SH) if f.startswith('sh60')]
         # sz, 000000~002729, 300001~300397, 399001
         sz_special_list = ['399001']
         sz_list = [os.path.splitext(f)[0][2:] for f in os.listdir(Stock.PATH_SZ) if f.startswith('sz00') or f.startswith('sz300')]
-
-        #test ???
-        sh_list = sh_list[:50]
-        sz_list = sz_list[:50]
+        if list_num:
+            sh_list = sh_list[:list_num/2]
+            sz_list = sz_list[:list_num/2]
 
         stock_list = {}
         Stock.get_stock_name_page()
@@ -293,6 +295,16 @@ class Stocks(object):
         Stock.price_time_index = stocks.price_time_index
         Stock.price_time_list = stocks.price_time_list
 
+    def load_data(self, gen_stock_num = None):
+        stock_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'stock_data.dat')
+        if os.path.isfile(stock_file):
+            self.load_from_file(stock_file)
+        else:
+            print 'no file found, start to generate list...'
+            self.get_stock_list(gen_stock_num)
+            self.save_to_file(stock_file)
+            print 'done, save to file'
+
 
 if __name__ == '__main__':
     test = 2
@@ -314,7 +326,7 @@ if __name__ == '__main__':
         #print t
     elif test == 2:
         stocks = Stocks()
-        stock_list = stocks.get_stock_list()
+        stock_list = stocks.get_stock_list(100)
         stocks.save_to_file('stock_data.dat')
         print 'saved to stock_data.dat'
         print stocks

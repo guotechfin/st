@@ -4,7 +4,7 @@
 import numpy as np
 
 from stocks import Util, Stocks, Stock
-from index import MACD, EMA, EMA2, Cross, LastMaxMin
+from index import MACD, EMA, EMA2, Cross, LastMaxMin, ATR
 from account import VirtualAccount
 
 
@@ -21,7 +21,7 @@ class Analyse(object):
     def __init__(self):
         self.in_market_analyse_days = 60   # 大约3个月
         self.stocks = Stocks()
-        self.stocks.load_from_file('stock_data.dat')
+        self.stocks.load_data(100)
 
     def analyse_in_market(self, in_market_stra, selected_stock_id = None):
         result_time = []
@@ -58,6 +58,7 @@ class Analyse(object):
 
     def analyse_trade(self, in_market_stra, out_market_stra, selected_stock_id = None):
         account = VirtualAccount()
+        self.trade_stocks = 0
         for stock_id, stock in self.stocks.stock_list.items():
             #print stock_id
             if selected_stock_id == stock_id or not selected_stock_id:
@@ -65,6 +66,7 @@ class Analyse(object):
                 out_market_stra.reset()
                 market_status_in_market = False
                 hold_stock_days = 0
+                self.trade_stocks += 1
                 # 选定满足策略的入市时间
                 for time_, price in stock.iter_tick():
                     in_market_trigger = in_market_stra.update(price)
@@ -73,19 +75,23 @@ class Analyse(object):
                         if in_market_trigger:
                             account.buy_stock(stock_id, price[1], today = time_)  # close价格作为买入, 卖出价
                             market_status_in_market = True
+                            if isinstance(out_market_stra, StopLossStra):  # StopLoss need start when in market
+                                out_market_stra.start_monitor()
                             hold_stock_days = 0
                     else:
                         if price: hold_stock_days += 1
                         if out_market_trigger:
                             account.sell_stock(stock_id, price[1], today = time_, hold_stock_days = hold_stock_days)
                             market_status_in_market = False
-        self.show_trade_info(in_market_stra, out_market_stra, account)
+                            if isinstance(in_market_stra, StopLossStra):  # StopLoss need start when in market
+                                in_market_stra.start_monitor()
+        self._show_trade_info(in_market_stra, out_market_stra, account)
 
-    def show_trade_info(self, in_market_stra, out_market_stra, account):
-        print account
+    def _show_trade_info(self, in_market_stra, out_market_stra, account):
+        #print account
         print 'In Market: ', in_market_stra.name
         print 'Out Market: ', out_market_stra.name
-        account.show_summarize()
+        account.show_summarize(self.stocks.get_period(), self.trade_stocks)
         #account.show_profit_pdf()
 
 
@@ -102,13 +108,74 @@ class RaiseBigStra(object):
 
     def update(self, price):  # [open, close, high, low]
         in_market_trigger = False
-        if price:
+        if not price:
             o, c, h, l = price
             if self.old_price:
                 price_raise = 100*(c / float(self.old_price) - 1)
                 if (self.raise_report and price_raise > self.raise_value) or (not self.raise_report and price_raise < self.raise_value):
                     in_market_trigger = True
             self.old_price = c
+        return in_market_trigger
+
+
+class ATRTunnelStra(object):
+    def __init__(self, ema_avg_days, atr_avg_days, multiple, tunnel_up = True):
+        self.name = 'EMA %d days, %s%.1fx ATR %d days Tunnel, %s' % (ema_avg_days, '+' if tunnel_up else '-', multiple, atr_avg_days, 'Up' if tunnel_up else 'Down')
+        self.tunnel_up = tunnel_up
+        self.ema_avg_days = ema_avg_days
+        self.atr_avg_days = atr_avg_days
+        self.multiple = float(multiple)
+        self.reset()
+
+    def reset(self):
+        self.ema = EMA(self.ema_avg_days)
+        self.atr = ATR(self.atr_avg_days)
+
+    def update(self, price):  # [open, close, high, low]
+        in_market_trigger = False
+        if price:
+            o, c, h, l = price
+            atr = self.atr.update(price)
+            ema = self.ema.update(c)
+            if atr and ema and ((self.tunnel_up and c > (ema + self.multiple*atr)) or (not self.tunnel_up and c < (ema - self.multiple*atr))):
+                in_market_trigger = True
+        return in_market_trigger
+
+
+class StopLossStra(object):
+    pass
+
+class ATRStopLossStra(StopLossStra):
+    def __init__(self, atr_avg_days, multiple, direction_up = True):
+        self.name = 'Stop Loss %s%.1fx ATR %d days, %s' % ('+' if direction_up else '-', multiple, atr_avg_days, 'Up' if direction_up else 'Down')
+        self.direction_up = direction_up
+        self.atr_avg_days = atr_avg_days
+        self.multiple = float(multiple)
+        self.reset()
+
+    def reset(self):
+        self.atr = ATR(self.atr_avg_days)
+        self.start_monitor()
+
+    def start_monitor(self):
+        self.threshold = None
+
+    def update(self, price):  # [open, close, high, low]
+        in_market_trigger = False
+        if price:
+            o, c, h, l = price
+            atr = self.atr.update(price)
+            if atr:
+                if self.direction_up:
+                    threshold = c + self.multiple * atr
+                    if self.threshold is None: self.threshold = threshold
+                    self.threshold = min(self.threshold, threshold)
+                else:
+                    threshold = c - self.multiple * atr
+                    if self.threshold is None: self.threshold = threshold
+                    self.threshold = max(self.threshold, threshold)
+            if self.threshold and ((self.direction_up and c > self.threshold) or (not self.direction_up and c < self.threshold)):
+                in_market_trigger = True
         return in_market_trigger
 
 
@@ -268,12 +335,17 @@ if __name__ == '__main__':
             pyplot.show()
     elif test == 2:
         analyse = Analyse()
+        #in_stra = ATRTunnelStra(20, 20, 3)
         in_stra = MacdDeviationStra()
+        #in_stra = ATRStopLossStra(20, 3)
+        #in_stra = BreakOutStra(20)
         #in_stra = AvgLineCrossStra(20, up_cross_report = True)
         #in_stra = TwoAvgLineCrossStra(10, 60)
         #out_stra = TwoAvgLineCrossStra(5, 20, up_cross_report = False)
         #out_stra = AvgLineCrossStra(20, up_cross_report = False)
-        out_stra = BreakOutStra(10, break_up = False)
+        #out_stra = BreakOutStra(10, break_up = False)
+        #out_stra = ATRTunnelStra(20, 20, 3, tunnel_up = False)
+        out_stra = ATRStopLossStra(20, 2, direction_up = False)
         analyse.analyse_trade(in_stra, out_stra)
 
 

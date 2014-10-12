@@ -1,38 +1,421 @@
+Stra 1 ####################
+In Market:  EMA 20 days, +3.0x ATR 20 days Tunnel, Up
+Out Market:  EMA 20 days, -3.0x ATR 20 days Tunnel, Down
 
-MACD in, 20 avg out:
+total_profit: -1904.9%, mean_profit: -12.9%
+mean_win_profit: 26.2%, mean_lose_profit: -24.1%
+win_lose_ratio: 22.3%
+win_lose_profit_ratio: 1.1
+win_lose_stock_ratio: 15.9%
+max_win: 132.4%, max_lose: -51.9%
+trade_num: 148, avg_hold_days: 184.3
+trade_freq: 0.13%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
 
-mean_profit: 260.163932
-win_lose_ratio: 32.105263
-win_lose_profit_ratio: 3.976897
-win_lose_stock_ratio: 46.835443
-max_win: 46.545652, max_lose: -9.935484
+Stra 2 ####################
+In Market:  EMA 20 days, +3.0x ATR 20 days Tunnel, Up
+Out Market:  MACD (12, 26, 9) Top Deviation: price range -10%~0%, dif range 50%, search last 3 cross
 
+total_profit: 16.0%, mean_profit: 0.1%
+mean_win_profit: 23.0%, mean_lose_profit: -17.0%
+win_lose_ratio: 42.7%
+win_lose_profit_ratio: 1.4
+win_lose_stock_ratio: 43.6%
+max_win: 125.4%, max_lose: -73.3%
+trade_num: 186, avg_hold_days: 178.7
+trade_freq: 0.17%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
 
-MACD in, Avg2 5, 20:
+Stra 3 ####################
+In Market:  EMA 20 days, +3.0x ATR 20 days Tunnel, Up
+Out Market:  BreakOut 10 days, Down
 
-mean_profit: 599.153054
-win_lose_ratio: 48.863636
-win_lose_profit_ratio: 2.536521
-win_lose_stock_ratio: 57.692308
-max_win: 139.083376, max_lose: -46.000000
+total_profit: -340.5%, mean_profit: -1.0%
+mean_win_profit: 12.9%, mean_lose_profit: -7.7%
+win_lose_ratio: 32.6%
+win_lose_profit_ratio: 1.7
+win_lose_stock_ratio: 41.8%
+max_win: 86.1%, max_lose: -60.5%
+trade_num: 351, avg_hold_days: 16.3
+trade_freq: 0.31%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
 
+Stra 4 ####################
+In Market:  EMA 20 days, +3.0x ATR 20 days Tunnel, Up
+Out Market:  Average Line 20 days, Down Cross
+
+total_profit: -402.6%, mean_profit: -1.2%
+mean_win_profit: 15.0%, mean_lose_profit: -7.3%
+win_lose_ratio: 27.4%
+win_lose_profit_ratio: 2.1
+win_lose_stock_ratio: 35.7%
+max_win: 86.1%, max_lose: -60.5%
+trade_num: 349, avg_hold_days: 15.9
+trade_freq: 0.31%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 5 ####################
+In Market:  EMA 20 days, +3.0x ATR 20 days Tunnel, Up
+Out Market:  Average Lines 5 days and 20 days, Dead Cross
+
+total_profit: -743.4%, mean_profit: -2.2%
+mean_win_profit: 15.4%, mean_lose_profit: -8.9%
+win_lose_ratio: 27.4%
+win_lose_profit_ratio: 1.7
+win_lose_stock_ratio: 32.0%
+max_win: 105.6%, max_lose: -60.5%
+trade_num: 333, avg_hold_days: 21.9
+trade_freq: 0.30%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 6 ####################
+In Market:  EMA 20 days, +3.0x ATR 20 days Tunnel, Up
+Out Market:  Stop Loss -2.0x ATR 20 days, Down
+
+total_profit: -169.5%, mean_profit: -0.5%
+mean_win_profit: 14.9%, mean_lose_profit: -7.5%
+win_lose_ratio: 31.2%
+win_lose_profit_ratio: 2.0
+win_lose_stock_ratio: 34.7%
+max_win: 93.8%, max_lose: -60.5%
+trade_num: 347, avg_hold_days: 16.0
+trade_freq: 0.31%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 7 ####################
+In Market:  MACD (12, 26, 9) Bottom Deviation: price range -10%~0%, dif range 50%, search last 3 cross
+Out Market:  EMA 20 days, -3.0x ATR 20 days Tunnel, Down
+
+total_profit: -301.0%, mean_profit: -3.1%
+mean_win_profit: 35.7%, mean_lose_profit: -16.6%
+win_lose_ratio: 25.8%
+win_lose_profit_ratio: 2.2
+win_lose_stock_ratio: 25.7%
+max_win: 175.3%, max_lose: -41.7%
+trade_num: 97, avg_hold_days: 196.3
+trade_freq: 0.09%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 8 ####################
+In Market:  MACD (12, 26, 9) Bottom Deviation: price range -10%~0%, dif range 50%, search last 3 cross
+Out Market:  MACD (12, 26, 9) Top Deviation: price range -10%~0%, dif range 50%, search last 3 cross
+
+total_profit: 1027.9%, mean_profit: 10.2%
+mean_win_profit: 29.3%, mean_lose_profit: -17.8%
+win_lose_ratio: 59.4%
+win_lose_profit_ratio: 1.6
+win_lose_stock_ratio: 60.3%
+max_win: 233.4%, max_lose: -66.9%
+trade_num: 101, avg_hold_days: 224.6
+trade_freq: 0.09%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 9 ####################
 In Market:  MACD (12, 26, 9) Bottom Deviation: price range -10%~0%, dif range 50%, search last 3 cross
 Out Market:  BreakOut 10 days, Down
 
-mean_profit: 498.554337
-win_lose_ratio: 45.502646
-win_lose_profit_ratio: 2.605983
-win_lose_stock_ratio: 56.962025
-max_win: 79.740260, max_lose: -14.413681
-
-In Market:  MACD (12, 26, 9) Bottom Deviation: price range -10%~0%, dif range 50%, search last 3 cross
-Out Market:  Stop Loss -3.0x ATR 20 days, Down
-
-mean_profit: 443.877821
-win_lose_ratio: 42.592593
-win_lose_profit_ratio: 2.325087
-win_lose_stock_ratio: 53.333333
-max_win: 135.826897, max_lose: -14.413681
-trade_num: 163, avg_hold_days: 38.37
-trade_freq: 0.14%, total_days: 1125, total_stocks: 100
+total_profit: 498.6%, mean_profit: 2.6%
+mean_win_profit: 10.7%, mean_lose_profit: -4.1%
+win_lose_ratio: 45.5%
+win_lose_profit_ratio: 2.6
+win_lose_stock_ratio: 57.0%
+max_win: 79.7%, max_lose: -14.4%
+trade_num: 190, avg_hold_days: 18.5
+trade_freq: 0.17%, total_days: 1125, total_stocks: 100
 test from 20100104 to 20140822
+
+Stra 10 ####################
+In Market:  MACD (12, 26, 9) Bottom Deviation: price range -10%~0%, dif range 50%, search last 3 cross
+Out Market:  Average Line 20 days, Down Cross
+
+total_profit: 361.0%, mean_profit: 1.9%
+mean_win_profit: 8.4%, mean_lose_profit: -2.7%
+win_lose_ratio: 41.7%
+win_lose_profit_ratio: 3.1
+win_lose_stock_ratio: 54.4%
+max_win: 46.5%, max_lose: -12.2%
+trade_num: 192, avg_hold_days: 15.8
+trade_freq: 0.17%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 11 ####################
+In Market:  MACD (12, 26, 9) Bottom Deviation: price range -10%~0%, dif range 50%, search last 3 cross
+Out Market:  Average Lines 5 days and 20 days, Dead Cross
+
+total_profit: 599.2%, mean_profit: 3.3%
+mean_win_profit: 11.9%, mean_lose_profit: -4.7%
+win_lose_ratio: 48.9%
+win_lose_profit_ratio: 2.5
+win_lose_stock_ratio: 57.7%
+max_win: 139.1%, max_lose: -46.0%
+trade_num: 180, avg_hold_days: 28.5
+trade_freq: 0.16%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 12 ####################
+In Market:  MACD (12, 26, 9) Bottom Deviation: price range -10%~0%, dif range 50%, search last 3 cross
+Out Market:  Stop Loss -2.0x ATR 20 days, Down
+
+total_profit: 622.0%, mean_profit: 3.3%
+mean_win_profit: 13.1%, mean_lose_profit: -5.2%
+win_lose_ratio: 46.7%
+win_lose_profit_ratio: 2.5
+win_lose_stock_ratio: 59.0%
+max_win: 152.9%, max_lose: -14.4%
+trade_num: 186, avg_hold_days: 22.8
+trade_freq: 0.17%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 13 ####################
+In Market:  BreakOut 20 days, Up
+Out Market:  EMA 20 days, -3.0x ATR 20 days Tunnel, Down
+
+total_profit: -3151.3%, mean_profit: -9.1%
+mean_win_profit: 29.9%, mean_lose_profit: -18.2%
+win_lose_ratio: 18.8%
+win_lose_profit_ratio: 1.6
+win_lose_stock_ratio: 15.8%
+max_win: 163.8%, max_lose: -52.4%
+trade_num: 345, avg_hold_days: 178.9
+trade_freq: 0.31%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 14 ####################
+In Market:  BreakOut 20 days, Up
+Out Market:  MACD (12, 26, 9) Top Deviation: price range -10%~0%, dif range 50%, search last 3 cross
+
+total_profit: 95.2%, mean_profit: 0.2%
+mean_win_profit: 22.1%, mean_lose_profit: -14.5%
+win_lose_ratio: 40.3%
+win_lose_profit_ratio: 1.5
+win_lose_stock_ratio: 45.8%
+max_win: 180.5%, max_lose: -67.6%
+trade_num: 398, avg_hold_days: 183.1
+trade_freq: 0.35%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 15 ####################
+In Market:  BreakOut 20 days, Up
+Out Market:  BreakOut 10 days, Down
+
+total_profit: 360.0%, mean_profit: 0.2%
+mean_win_profit: 9.7%, mean_lose_profit: -5.3%
+win_lose_ratio: 36.2%
+win_lose_profit_ratio: 1.9
+win_lose_stock_ratio: 46.0%
+max_win: 127.5%, max_lose: -56.6%
+trade_num: 2090, avg_hold_days: 16.3
+trade_freq: 1.86%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 16 ####################
+In Market:  BreakOut 20 days, Up
+Out Market:  Average Line 20 days, Down Cross
+
+total_profit: 130.9%, mean_profit: 0.1%
+mean_win_profit: 8.8%, mean_lose_profit: -4.1%
+win_lose_ratio: 32.3%
+win_lose_profit_ratio: 2.1
+win_lose_stock_ratio: 45.0%
+max_win: 127.5%, max_lose: -56.6%
+trade_num: 2398, avg_hold_days: 12.4
+trade_freq: 2.13%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 17 ####################
+In Market:  BreakOut 20 days, Up
+Out Market:  Average Lines 5 days and 20 days, Dead Cross
+
+total_profit: -27.6%, mean_profit: -0.0%
+mean_win_profit: 11.2%, mean_lose_profit: -5.4%
+win_lose_ratio: 32.5%
+win_lose_profit_ratio: 2.1
+win_lose_stock_ratio: 41.0%
+max_win: 129.1%, max_lose: -56.6%
+trade_num: 1905, avg_hold_days: 19.3
+trade_freq: 1.69%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 18 ####################
+In Market:  BreakOut 20 days, Up
+Out Market:  Stop Loss -2.0x ATR 20 days, Down
+
+total_profit: 501.5%, mean_profit: 0.3%
+mean_win_profit: 11.2%, mean_lose_profit: -6.1%
+win_lose_ratio: 36.8%
+win_lose_profit_ratio: 1.8
+win_lose_stock_ratio: 45.0%
+max_win: 142.3%, max_lose: -56.6%
+trade_num: 1881, avg_hold_days: 19.1
+trade_freq: 1.67%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 19 ####################
+In Market:  Average Line 20 days, Up Cross
+Out Market:  EMA 20 days, -3.0x ATR 20 days Tunnel, Down
+
+total_profit: -2557.2%, mean_profit: -7.1%
+mean_win_profit: 29.0%, mean_lose_profit: -17.1%
+win_lose_ratio: 21.8%
+win_lose_profit_ratio: 1.7
+win_lose_stock_ratio: 17.9%
+max_win: 172.6%, max_lose: -49.6%
+trade_num: 362, avg_hold_days: 179.8
+trade_freq: 0.32%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 20 ####################
+In Market:  Average Line 20 days, Up Cross
+Out Market:  MACD (12, 26, 9) Top Deviation: price range -10%~0%, dif range 50%, search last 3 cross
+
+total_profit: 109.8%, mean_profit: 0.3%
+mean_win_profit: 20.3%, mean_lose_profit: -14.1%
+win_lose_ratio: 41.7%
+win_lose_profit_ratio: 1.4
+win_lose_stock_ratio: 45.8%
+max_win: 189.7%, max_lose: -67.1%
+trade_num: 427, avg_hold_days: 185.6
+trade_freq: 0.38%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 21 ####################
+In Market:  Average Line 20 days, Up Cross
+Out Market:  BreakOut 10 days, Down
+
+total_profit: 711.8%, mean_profit: 0.2%
+mean_win_profit: 10.1%, mean_lose_profit: -4.6%
+win_lose_ratio: 32.6%
+win_lose_profit_ratio: 2.2
+win_lose_stock_ratio: 52.0%
+max_win: 133.3%, max_lose: -52.4%
+trade_num: 3671, avg_hold_days: 15.1
+trade_freq: 3.26%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 22 ####################
+In Market:  Average Line 20 days, Up Cross
+Out Market:  Average Line 20 days, Down Cross
+
+total_profit: 258.7%, mean_profit: 0.1%
+mean_win_profit: 7.8%, mean_lose_profit: -3.5%
+win_lose_ratio: 31.2%
+win_lose_profit_ratio: 2.3
+win_lose_stock_ratio: 44.0%
+max_win: 133.3%, max_lose: -52.5%
+trade_num: 4692, avg_hold_days: 13.1
+trade_freq: 4.17%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 23 ####################
+In Market:  Average Line 20 days, Up Cross
+Out Market:  Average Lines 5 days and 20 days, Dead Cross
+
+total_profit: 275.9%, mean_profit: 0.1%
+mean_win_profit: 11.0%, mean_lose_profit: -4.9%
+win_lose_ratio: 31.5%
+win_lose_profit_ratio: 2.2
+win_lose_stock_ratio: 43.0%
+max_win: 139.1%, max_lose: -52.4%
+trade_num: 2753, avg_hold_days: 24.0
+trade_freq: 2.45%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 24 ####################
+In Market:  Average Line 20 days, Up Cross
+Out Market:  Stop Loss -2.0x ATR 20 days, Down
+
+total_profit: 678.8%, mean_profit: 0.2%
+mean_win_profit: 11.5%, mean_lose_profit: -5.9%
+win_lose_ratio: 35.4%
+win_lose_profit_ratio: 1.9
+win_lose_stock_ratio: 49.0%
+max_win: 158.6%, max_lose: -52.4%
+trade_num: 2938, avg_hold_days: 20.2
+trade_freq: 2.61%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 25 ####################
+In Market:  Average Lines 10 days and 60 days, Gold Cross
+Out Market:  EMA 20 days, -3.0x ATR 20 days Tunnel, Down
+
+total_profit: -2444.3%, mean_profit: -9.7%
+mean_win_profit: 28.5%, mean_lose_profit: -20.0%
+win_lose_ratio: 21.1%
+win_lose_profit_ratio: 1.4
+win_lose_stock_ratio: 18.5%
+max_win: 157.3%, max_lose: -53.3%
+trade_num: 251, avg_hold_days: 200.6
+trade_freq: 0.22%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 26 ####################
+In Market:  Average Lines 10 days and 60 days, Gold Cross
+Out Market:  MACD (12, 26, 9) Top Deviation: price range -10%~0%, dif range 50%, search last 3 cross
+
+total_profit: 864.9%, mean_profit: 2.5%
+mean_win_profit: 20.9%, mean_lose_profit: -12.3%
+win_lose_ratio: 44.6%
+win_lose_profit_ratio: 1.7
+win_lose_stock_ratio: 50.0%
+max_win: 211.6%, max_lose: -65.0%
+trade_num: 351, avg_hold_days: 164.1
+trade_freq: 0.31%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 27 ####################
+In Market:  Average Lines 10 days and 60 days, Gold Cross
+Out Market:  BreakOut 10 days, Down
+
+total_profit: -282.7%, mean_profit: -0.2%
+mean_win_profit: 9.3%, mean_lose_profit: -4.9%
+win_lose_ratio: 32.8%
+win_lose_profit_ratio: 1.9
+win_lose_stock_ratio: 40.0%
+max_win: 124.7%, max_lose: -55.1%
+trade_num: 1190, avg_hold_days: 15.4
+trade_freq: 1.06%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 28 ####################
+In Market:  Average Lines 10 days and 60 days, Gold Cross
+Out Market:  Average Line 20 days, Down Cross
+
+total_profit: -265.0%, mean_profit: -0.2%
+mean_win_profit: 8.9%, mean_lose_profit: -4.1%
+win_lose_ratio: 29.8%
+win_lose_profit_ratio: 2.2
+win_lose_stock_ratio: 37.0%
+max_win: 124.7%, max_lose: -55.1%
+trade_num: 1233, avg_hold_days: 12.6
+trade_freq: 1.10%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 29 ####################
+In Market:  Average Lines 10 days and 60 days, Gold Cross
+Out Market:  Average Lines 5 days and 20 days, Dead Cross
+
+total_profit: -232.0%, mean_profit: -0.2%
+mean_win_profit: 11.1%, mean_lose_profit: -5.3%
+win_lose_ratio: 31.1%
+win_lose_profit_ratio: 2.1
+win_lose_stock_ratio: 38.0%
+max_win: 123.5%, max_lose: -55.1%
+trade_num: 1165, avg_hold_days: 20.1
+trade_freq: 1.04%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+Stra 30 ####################
+In Market:  Average Lines 10 days and 60 days, Gold Cross
+Out Market:  Stop Loss -2.0x ATR 20 days, Down
+
+total_profit: 213.8%, mean_profit: 0.2%
+mean_win_profit: 11.3%, mean_lose_profit: -5.8%
+win_lose_ratio: 35.1%
+win_lose_profit_ratio: 1.9
+win_lose_stock_ratio: 43.0%
+max_win: 136.4%, max_lose: -55.1%
+trade_num: 1129, avg_hold_days: 19.1
+trade_freq: 1.00%, total_days: 1125, total_stocks: 100
+test from 20100104 to 20140822
+
+[Finished in 31.5s]

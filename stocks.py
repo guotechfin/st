@@ -250,10 +250,10 @@ class Stocks(object):
     def get_stock_list(self, list_num = None):
         # sh, 600000~ 603993, 999999
         sh_special_list = ['999999']
-        sh_list = [os.path.splitext(f)[0][2:] for f in os.listdir(Stock.PATH_SH) if f.startswith('sh60')]
+        sh_list = sh_special_list + [os.path.splitext(f)[0][2:] for f in os.listdir(Stock.PATH_SH) if f.startswith('sh60')]
         # sz, 000000~002729, 300001~300397, 399001
         sz_special_list = ['399001']
-        sz_list = [os.path.splitext(f)[0][2:] for f in os.listdir(Stock.PATH_SZ) if f.startswith('sz00') or f.startswith('sz300')]
+        sz_list = sz_special_list + [os.path.splitext(f)[0][2:] for f in os.listdir(Stock.PATH_SZ) if f.startswith('sz00') or f.startswith('sz300')]
         if list_num:
             sh_list = sh_list[:list_num/2]
             sz_list = sz_list[:list_num/2]

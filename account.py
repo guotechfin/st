@@ -31,14 +31,18 @@ class Account(object):
         self.profit = []   # sell_time, stock_id, profit
         self.all_profit = []  # profit
         self.hold_days = []  # stock hold days of one trade
+        self.latest_price = {}  # stock_id: latest stock price
 
     def update(self, tick):
         # tick: (time, [(stock_id, (open, close, high, low, volume)), (stock_id, ()), ...])
         stocks_value = 0
         time_, stocks_price = tick
         for stock_id, price in stocks_price:
+            if price:
+                self.latest_price[stock_id] = price[1]
+        for stock_id, c in self.latest_price.items():
             if stock_id in self.hold_stocks:
-                stocks_value += price[1] * self.hold_stocks[stock_id]
+                stocks_value += c * self.hold_stocks[stock_id]
         self.market_time.append(time_)
         self.market_value.append(stocks_value + self.money)
 
@@ -48,6 +52,9 @@ class Account(object):
             if sid == stock_id and Util.time_to_digit(buy_time) < Util.time_to_digit(time_):
                 stock_num += number
         return stock_num
+
+    def hold_stock_num(self):
+        return len(self.hold_stocks)
 
     # def buy_sell_stocks(self, oper, today = None):
     #     # oper: [(stock_id, 'buy/sell', price, number), ...]
@@ -67,6 +74,8 @@ class Account(object):
             self.money -= money
             self.stocks.append((stock_id, today, price, number, money))
             self.history.append((today, 'buy', stock_id, price, number))
+            if stock_id not in self.hold_stocks: self.hold_stocks[stock_id] = 0
+            self.hold_stocks[stock_id] += number
 
     # # money: 元, price: 元/股, number: 股
     # def buy_stock_1(self, stock_id, price, number = 0, today = None):
@@ -97,6 +106,7 @@ class Account(object):
             profit = (float(money) / stock_cost - 1) * 100
             self.profit.append((today, stock_id, profit))
             self.all_profit.append(profit)
+            del self.hold_stocks[stock_id]
             if hold_stock_days: self.hold_days.append(hold_stock_days)
 
     # def sell_stock_1(self, stock_id, price, number = 0, today = None, hold_stock_days = None):

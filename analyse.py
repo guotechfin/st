@@ -81,11 +81,11 @@ class Analyse(object):
 
     def analyse_real_strategy(self):
         in_stra_list = [ #(ATRTunnelStra, (20, 20, 3, False)),
-                         (MacdDeviationStra, ()),
+                         #(MacdDeviationStra, ()),
                          #(BreakOutStra, (20,)),
                          #(AvgLineCrossStra, (20,)),
                          #(TwoAvgLineCrossStra, (10, 60)),
-                         #(RandomStra, (0.3,)),
+                         (RandomStra, (0.3,), (100,)),
                         ]
 
         out_stra_list = [ #(ATRTunnelStra, (20, 20, 3)),
@@ -94,11 +94,11 @@ class Analyse(object):
                           #(AvgLineCrossStra, (20, False)),
                           #(TwoAvgLineCrossStra, (5, 20, False)),
                           #(ATRStopLossStra, (20, 2, False)),
-                          (ConstPeriodStra, (60,)),
-                          #(ConstPeriodStra, [(5,), (20,), (60,)]),
+                          (ConstPeriodStra, (5,), (1,)),
+                          #(ConstPeriodStra, (5,), (20,), (60,)),
                         ]
 
-        buy_stra_list = [ (BuyOneStra, ('first', )),
+        buy_stra_list = [ (BuyOneStra, ('first', 1)),
                         ]
 
         self.market_index = {}
@@ -107,30 +107,21 @@ class Analyse(object):
             self.market_index[stock_id] = (stock.processed_price[0][1], stock.processed_price[-1][1])  # close
 
         stra_index = 1
-        for in_stra_class, in_stra_param in in_stra_list:
-            if isinstance(in_stra_param, list):
-                in_stra = [(in_stra_class, param) for param in in_stra_param]
-            else:
-                in_stra = [(in_stra_class, in_stra_param)]
+        for in_stra_class in in_stra_list:
+            in_stra = [(in_stra_class[0], param) for param in in_stra_class[1:]]
 
             for in_market_stra in in_stra:
-                for out_stra_class, out_stra_param in out_stra_list:
-                    if isinstance(out_stra_param, list):
-                        out_stra = [(out_stra_class, param) for param in out_stra_param]
-                    else:
-                        out_stra = [(out_stra_class, out_stra_param)]
+                for out_stra_class in out_stra_list:
+                    out_stra = [(out_stra_class[0], param) for param in out_stra_class[1:]]
 
                     for out_market_stra in out_stra:
-                        for buy_stra_class, buy_stra_param in buy_stra_list:
-                            if isinstance(buy_stra_param, list):
-                                buy_stra = [(buy_stra_class, param) for param in buy_stra_param]
-                            else:
-                                buy_stra = [(buy_stra_class, buy_stra_param)]
+                        for buy_stra_class in buy_stra_list:
+                            buy_stra = [(buy_stra_class[0], param) for param in buy_stra_class[1:]]
 
-                        for buy_stock_stra in buy_stra:
-                            print 'Stra %d' % stra_index, '#' * 20, '\n'
-                            stra_index += 1
-                            analyse.analyse_real_trade(in_market_stra, out_market_stra, buy_stock_stra)
+                            for buy_stock_stra in buy_stra:
+                                print 'Stra %d' % stra_index, '#' * 20, '\n'
+                                stra_index += 1
+                                analyse.analyse_real_trade(in_market_stra, out_market_stra, buy_stock_stra)
 
     def analyse_real_trade(self, in_market_stra_class, out_market_stra_class, buy_stock_stra_class):
         in_stra_class, in_stra_param = in_market_stra_class
@@ -211,7 +202,7 @@ class Analyse(object):
         self._show_account_info(account)
 
     def _show_account_info(self, account):
-        print account
+        #print account
         account.show_summarize(self.stocks.get_period(), self.trade_stock_num)
         s = 'MarketIndex:'
         for stock_id, (start_index, end_index) in self.market_index.items():

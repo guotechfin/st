@@ -6,16 +6,19 @@ from index import MACD, EMA, EMA2, Cross, LastMaxMin, ATR
 
 
 class BuyOneStra(object):
-    def __init__(self, select = 'random'):
+    def __init__(self, select = 'random', max_hold_stocks = 0):
         self.name = 'Buy One At a Time, %s' % select
+        if max_hold_stocks: self.name += ', Max Hold %d Stocks in Account' % max_hold_stocks
         self.select = select  # 'random', 'min', 'max', 'first', 'last'
+        self.max_hold_stocks = max_hold_stocks   # 0: unlimited
 
     def buy_stock(self, in_trigger_stocks, tick, account):
         # tick: (time, [(stock_id, (open, close, high, low, volume)), (stock_id, ()), ...])
         time_, stocks_price = tick
         buy_stocks = []
         in_trigger_num = len(in_trigger_stocks)
-        if in_trigger_num:
+        hold_stock_num = account.hold_stock_num()
+        if in_trigger_num and (not self.max_hold_stocks or hold_stock_num < self.max_hold_stocks):
             if self.select == 'random':
                 index = random.randint(0, in_trigger_num - 1)
             elif self.select == 'first':

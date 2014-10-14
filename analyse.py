@@ -80,25 +80,26 @@ class Analyse(object):
                 analyse.analyse_trade(in_stra, out_stra)
 
     def analyse_real_strategy(self):
-        in_stra_list = [ #(ATRTunnelStra, (20, 20, 3, False)),
-                         #(MacdDeviationStra, ()),
-                         #(BreakOutStra, (20,)),
-                         #(AvgLineCrossStra, (20,)),
-                         #(TwoAvgLineCrossStra, (10, 60)),
-                         (RandomStra, (0.3,), (100,)),
+        in_stra_list = [ (ATRTunnelStra, (20, 20, 3, False)),
+                         (MacdDeviationStra, ()),
+                         (BreakOutStra, (20,)),
+                         (AvgLineCrossStra, (20,)),
+                         (TwoAvgLineCrossStra, (10, 60)),
+                         #(RandomStra, (0.3,), (100,)),
+                         (RandomStra, (0.3,)),
                         ]
 
-        out_stra_list = [ #(ATRTunnelStra, (20, 20, 3)),
-                          #(MacdDeviationStra, (False,)),
-                          #(BreakOutStra, (10, False)),
-                          #(AvgLineCrossStra, (20, False)),
-                          #(TwoAvgLineCrossStra, (5, 20, False)),
-                          #(ATRStopLossStra, (20, 2, False)),
-                          (ConstPeriodStra, (5,), (1,)),
-                          #(ConstPeriodStra, (5,), (20,), (60,)),
+        out_stra_list = [ (ATRTunnelStra, (20, 20, 3)),
+                          (MacdDeviationStra, (False,)),
+                          (BreakOutStra, (10, False)),
+                          (AvgLineCrossStra, (20, False)),
+                          (TwoAvgLineCrossStra, (5, 20, False)),
+                          (ATRStopLossStra, (20, 2, False)),
+                          #(ConstPeriodStra, (1,)),
+                          (ConstPeriodStra, (5,), (20,), (60,)),
                         ]
 
-        buy_stra_list = [ (BuyOneStra, ('first', 1)),
+        buy_stra_list = [ (BuyOneStra, ('random', 1)),
                         ]
 
         self.market_index = {}
@@ -106,6 +107,7 @@ class Analyse(object):
             stock = self.stocks.stock_list[stock_id]
             self.market_index[stock_id] = (stock.processed_price[0][1], stock.processed_price[-1][1])  # close
 
+        result = []
         stra_index = 1
         for in_stra_class in in_stra_list:
             in_stra = [(in_stra_class[0], param) for param in in_stra_class[1:]]
@@ -120,22 +122,37 @@ class Analyse(object):
 
                             for buy_stock_stra in buy_stra:
                                 print 'Stra %d' % stra_index, '#' * 20, '\n'
+                                self._show_stra_info(in_market_stra, out_market_stra, buy_stock_stra)
+                                p = analyse.analyse_real_trade(in_market_stra, out_market_stra, buy_stock_stra)
+                                result.append((stra_index, in_market_stra, out_market_stra, buy_stock_stra, p))
                                 stra_index += 1
-                                analyse.analyse_real_trade(in_market_stra, out_market_stra, buy_stock_stra)
+        # print result
+        for r in result:
+            s = 'Stra %d, In(%s) Out(%s) Buy(%s): ' % (r[0], self._class_abbreviation(r[1]), self._class_abbreviation(r[2]), self._class_abbreviation(r[3]))
+            s += '(total_profit: %.1f%%, no_fee_profit: %.1f%%, mean_profit: %.1f%%' % r[4]
+            print s
+        print ''
+
+    def _class_instance(self, class_param_tuple):
+        class_, param = class_param_tuple
+        return class_(*param)
+
+    def _class_name(self, class_param_tuple):
+        return self._class_instance(class_param_tuple).name
+
+    def _class_abbreviation(self, class_param_tuple):
+        return self._class_instance(class_param_tuple).abbreviation
 
     def analyse_real_trade(self, in_market_stra_class, out_market_stra_class, buy_stock_stra_class):
-        in_stra_class, in_stra_param = in_market_stra_class
-        out_stra_class, out_stra_param = out_market_stra_class
-        buy_stra_class, buy_stra_param = buy_stock_stra_class
         market_trigger = {}
         market_status_in_market = {}
         hold_stock_days = {}
 
-        buy_stra = buy_stra_class(*buy_stra_param)
+        buy_stra = self._class_instance(buy_stock_stra_class)
         account = Account(50000)  # initial money
         for stock_id in self.stocks.stock_list:
             if stock_id not in Stock.SPECIAL_LIST:
-                market_trigger[stock_id] = StraTrigger(in_stra_class(*in_stra_param), out_stra_class(*out_stra_param))
+                market_trigger[stock_id] = StraTrigger(self._class_instance(in_market_stra_class), self._class_instance(out_market_stra_class))
                 market_status_in_market[stock_id] = False
                 hold_stock_days[stock_id] = 0
 
@@ -161,13 +178,18 @@ class Analyse(object):
                 hold_stock_days[stock_id] = 0
                 market_trigger[stock_id].enter_market()
             account.update(tick)
-        self._show_stra_info(in_stra_class(*in_stra_param), out_stra_class(*out_stra_param), buy_stra_class(*buy_stra_param))
+        account.summarize()
+        total_profit = account.report['account_total_profit']
+        no_fee_profit = account.report['no_fee_total_profit']
+        mean_profit = account.report['mean_profit']
         self._show_account_info(account)
+        return (total_profit, no_fee_profit, mean_profit)
 
-    def _show_stra_info(self, in_market_stra = None, out_market_stra = None, buy_stock_stra = None):
-        if in_market_stra: print 'In Market: ', in_market_stra.name
-        if out_market_stra: print 'Out Market: ', out_market_stra.name
-        if buy_stock_stra: print 'Select Stock: ', buy_stock_stra.name
+    def _show_stra_info(self, in_market_stra_class = None, out_market_stra_class = None, buy_stock_stra_class = None):
+        if in_market_stra_class: print 'In Market: ', self._class_name(in_market_stra_class)
+        if out_market_stra_class: print 'Out Market: ', self._class_name(out_market_stra_class)
+        if buy_stock_stra_class: print 'Select Stock: ', self._class_name(buy_stock_stra_class)
+        print ''
 
     def analyse_trade(self, in_market_stra, out_market_stra, selected_stock_id = None):
         account = VirtualAccount()
@@ -202,13 +224,15 @@ class Analyse(object):
         self._show_account_info(account)
 
     def _show_account_info(self, account):
-        #print account
-        account.show_summarize(self.stocks.get_period(), self.trade_stock_num)
+        #account.show_trade_history()
+        print account
+        account.show_report(self.stocks.get_period(), self.trade_stock_num)
         s = 'MarketIndex:'
         for stock_id, (start_index, end_index) in self.market_index.items():
             s += ' %s: %.1f%%(%.1f~%.1f),' % (stock_id, (float(end_index) / start_index - 1)*100, start_index, end_index)
         print s + '\n'
         #account.show_profit_pdf()
+        #account.show_market_value()
 
 
 if __name__ == '__main__':

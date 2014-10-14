@@ -13,13 +13,29 @@ class Account(object):
         self.reset()
 
     def __str__(self):
+        s = 'Account market value: %d\n' % self.market_value[-1]
+        s += '    money: %d\n' % self.money
+        if self.hold_stocks:
+            s += '    stock:\n'
+            stock_num = 0
+            for stock_id, (t, c) in self.latest_price.items():
+                if stock_id in self.hold_stocks:
+                    number = self.hold_stocks[stock_id]
+                    s += '        %s, number: %d, value: %.1f (@%s)\n' % (stock_id, number*100, number * c, t)
+                    stock_num += 1
+            if stock_num != len(self.hold_stocks): raise Exception('Account Error: hold %d stocks, only find %d stocks in latest price' % (len(self.hold_stocks, stock_num)))
+        return s
+
+    def show_trade_history(self):
         s = 'history:\n'
         for h in self.history:
             s += '    %s\n' % str(h)
         s += '\nprofit:\n'
         for p in self.profit:
             s += '    %s\n' % str(p)
-        return s
+        #for p in zip(self.market_time, self.market_value):
+        #    s += '    %s\n' % str(p)
+        print s
 
     def reset(self):
         self.money = self.init_money
@@ -31,7 +47,9 @@ class Account(object):
         self.profit = []   # sell_time, stock_id, profit
         self.all_profit = []  # profit
         self.hold_days = []  # stock hold days of one trade
-        self.latest_price = {}  # stock_id: latest stock price
+        self.latest_price = {}  # stock_id: (latest time, latest stock price)
+        self.total_fee = 0
+        self.report = {}
 
     def update(self, tick):
         # tick: (time, [(stock_id, (open, close, high, low, volume)), (stock_id, ()), ...])
@@ -39,10 +57,13 @@ class Account(object):
         time_, stocks_price = tick
         for stock_id, price in stocks_price:
             if price:
-                self.latest_price[stock_id] = price[1]
-        for stock_id, c in self.latest_price.items():
+                self.latest_price[stock_id] = (time_, price[1])
+        stock_num = 0
+        for stock_id, (t, c) in self.latest_price.items():
             if stock_id in self.hold_stocks:
                 stocks_value += c * self.hold_stocks[stock_id]
+                stock_num += 1
+        if stock_num != len(self.hold_stocks): raise Exception('Account Update Error: hold %d stocks, only find %d stocks in latest price' % (len(self.hold_stocks, stock_num)))
         self.market_time.append(time_)
         self.market_value.append(stocks_value + self.money)
 
@@ -74,6 +95,7 @@ class Account(object):
             self.money -= money
             self.stocks.append((stock_id, today, price, number, money))
             self.history.append((today, 'buy', stock_id, price, number))
+            self.total_fee += price * number * self.fee
             if stock_id not in self.hold_stocks: self.hold_stocks[stock_id] = 0
             self.hold_stocks[stock_id] += number
 
@@ -131,7 +153,14 @@ class Account(object):
     #         self.history.append((today, 'sell', stock_id, price, total_sell_n))
     #         self.money += total_sell_n * price * 100
 
-    def summarize(self, test_period = None, trade_stocks = None):
+    def _divide(self, x, y, except_value = 10000):
+        try:
+            return float(x) / y
+        except ZeroDivisionError:
+            if x == 0: return 0
+            return except_value
+
+    def summarize(self):
         # 平均收益, 胜率, 盈亏比, 盈亏股票比, 频率, 最大回撤, 盈利直方图
         total_profit = 0
         win_num = lose_num = 0
@@ -156,32 +185,44 @@ class Account(object):
                 win_stock += 1
             elif profit < 0:
                 lose_stock += 1
-        win_profit, lose_profit = float(win_profit) / win_num, float(lose_profit) / lose_num
-        win_lose_profit_ratio = -float(win_profit) / lose_profit
-        win_lose_ratio = float(win_num) / (win_num + lose_num) * 100
-        win_lose_stock_ratio = float(win_stock) / (win_stock + lose_stock) * 100
-        mean_profit = total_profit / len(self.profit)
-
-        s = '\ntotal_profit: %.1f%%, mean_profit: %.1f%%\n' % (total_profit, mean_profit)
-        s += 'mean_win_profit: %.1f%%, mean_lose_profit: %.1f%%\n' % (win_profit, lose_profit)
-        s += 'win_lose_ratio: %.1f%%\n' % win_lose_ratio
-        s += 'win_lose_profit_ratio: %.1f\n' % win_lose_profit_ratio
-        s += 'win_lose_stock_ratio: %.1f%%\n' % win_lose_stock_ratio
-        s += 'max_win: %.1f%%, max_lose: %.1f%%\n' % (max_win_profit, max_lose_profit)
-        s += 'trade_num: %d, avg_hold_days: %.1f' % (len(self.profit), np.mean(self.hold_days))
-        if test_period and trade_stocks:
-            days, day_start, day_end = test_period
-            s += '\ntrade_freq: %.2f%%, total_days: %d, total_stocks: %d\n' % (len(self.profit)*100/float(days)/trade_stocks, days, trade_stocks)
-            s += 'test from %s to %s' % (day_start, day_end)
-        return s
+        self.report['win_profit'], self.report['lose_profit'] = self._divide(win_profit, win_num), self._divide(lose_profit, lose_num)
+        self.report['win_lose_profit_ratio'] = self._divide(self.report['win_profit'], -self.report['lose_profit'])
+        self.report['win_lose_ratio'] = self._divide(win_num, win_num + lose_num) * 100
+        self.report['win_lose_stock_ratio'] = self._divide(win_stock, win_stock + lose_stock) * 100
+        self.report['max_win_profit'], self.report['max_lose_profit'] = max_win_profit, max_lose_profit
+        self.report['total_profit'] = total_profit
+        self.report['mean_profit'] = self._divide(total_profit, len(self.profit))
+        self.report['account_profit'] = self.market_value[-1] - self.init_money
+        self.report['no_fee_total_profit'] = (float(self.market_value[-1] + self.total_fee) / self.init_money - 1) * 100
+        self.report['account_total_profit'] = (float(self.market_value[-1]) / self.init_money - 1) * 100
+        self.report['account_mean_profit'] = self._divide(self.report['account_total_profit'], len(self.profit))
 
     def show_profit_pdf(self):
         plt.hist(self.all_profit, 100)
         plt.grid(True)
         plt.show()
 
-    def show_summarize(self, test_period = None, trade_stocks = None):
-        s = self.summarize(test_period, trade_stocks)
+    def show_market_value(self):
+        plt.figure()
+        plt.plot(self.market_value)
+        plt.grid(True)
+        plt.show()
+
+    def show_report(self, test_period = None, trade_stocks = None):
+        s = 'account_total_profit: %.1f%% (%.1f%% no fee), account_mean_profit: %.1f%%\n' % (
+            self.report['account_total_profit'], self.report['no_fee_total_profit'], self.report['account_mean_profit'])
+        s += '(from trade:)total_profit: %.1f%%, mean_profit: %.1f%%\n' % (self.report['total_profit'], self.report['mean_profit'])
+        s += 'mean_win_profit: %.1f%%, mean_lose_profit: %.1f%%\n' % (self.report['win_profit'], self.report['lose_profit'])
+        s += 'win_lose_ratio: %.1f%%\n' % self.report['win_lose_ratio']
+        s += 'win_lose_profit_ratio: %.1f\n' % self.report['win_lose_profit_ratio']
+        s += 'win_lose_stock_ratio: %.1f%%\n' % self.report['win_lose_stock_ratio']
+        s += 'max_win: %.1f%%, max_lose: %.1f%%\n' % (self.report['max_win_profit'], self.report['max_lose_profit'])
+        s += 'trade_num: %d, avg_hold_days: %.1f\n' % (len(self.profit), np.mean(self.hold_days))
+        s += 'total_fee: %d, fee/total_fit: %.1f%%' % (self.total_fee, float(self.total_fee) / self.report['account_profit'] * 100)
+        if test_period and trade_stocks:
+            days, day_start, day_end = test_period
+            s += '\ntrade_freq: %.2f%%, total_days: %d, total_stocks: %d\n' % (len(self.profit)*100/float(days), days, trade_stocks)
+            s += 'test from %s to %s' % (day_start, day_end)
         print s
 
 class VirtualAccount(object):

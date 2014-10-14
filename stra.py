@@ -9,6 +9,7 @@ class BuyOneStra(object):
     def __init__(self, select = 'random', max_hold_stocks = 0):
         self.name = 'Buy One At a Time, %s' % select
         if max_hold_stocks: self.name += ', Max Hold %d Stocks in Account' % max_hold_stocks
+        self.abbreviation = 'BuyOne(%s)' % select
         self.select = select  # 'random', 'min', 'max', 'first', 'last'
         self.max_hold_stocks = max_hold_stocks   # 0: unlimited
 
@@ -71,6 +72,7 @@ class StraTrigger(object):
 class RandomStra(object):
     def __init__(self, probability, direction_up = True):
         self.name = 'Random %s, probability %.1f%%' % ('Up' if direction_up else 'Down', probability)
+        self.abbreviation = 'Random'
         self.probability = probability * 100   # x/10000
         self.direction_up = direction_up
         self.reset()
@@ -89,6 +91,7 @@ class RandomStra(object):
 class ConstPeriodStra(object):
     def __init__(self, period, direction_up = False):
         self.name = 'Const Period %d days, %s' % (period, 'Up' if direction_up else 'Down')
+        self.abbreviation = 'Const%d' % period
         self.period = period
         self.reset()
 
@@ -111,6 +114,7 @@ class ConstPeriodStra(object):
 class RaiseBigStra(object):
     def __init__(self, raise_value, raise_report = True):
         self.name = '%s %s : %f%%' % ('Raise' if raise_report else 'Drop', 'In One Day', raise_value)
+        self.abbreviation = 'OneDay%d' % raise_value
         self.raise_report = raise_report  # True: 上涨, False: 下跌
         self.raise_value = raise_value  # 幅度百分比
         self.reset()
@@ -133,6 +137,7 @@ class RaiseBigStra(object):
 class ATRTunnelStra(object):
     def __init__(self, ema_avg_days, atr_avg_days, multiple, tunnel_up = True):
         self.name = 'EMA %d days, %s%.1fx ATR %d days Tunnel, %s' % (ema_avg_days, '+' if tunnel_up else '-', multiple, atr_avg_days, 'Up' if tunnel_up else 'Down')
+        self.abbreviation = 'ATRTunnel%.1fx' % multiple
         self.tunnel_up = tunnel_up
         self.ema_avg_days = ema_avg_days
         self.atr_avg_days = atr_avg_days
@@ -157,6 +162,7 @@ class ATRTunnelStra(object):
 class ATRStopLossStra(object):
     def __init__(self, atr_avg_days, multiple, direction_up = True):
         self.name = 'Stop Loss %s%.1fx ATR %d days, %s' % ('+' if direction_up else '-', multiple, atr_avg_days, 'Up' if direction_up else 'Down')
+        self.abbreviation = 'ATRLoss%.1fx' % multiple
         self.direction_up = direction_up
         self.atr_avg_days = atr_avg_days
         self.multiple = float(multiple)
@@ -192,6 +198,7 @@ class ATRStopLossStra(object):
 class BreakOutStra(object):
     def __init__(self, break_days, break_up = True):
         self.name = 'BreakOut %d days, %s' % (break_days, 'Up' if break_up else 'Down')
+        self.abbreviation = 'BreakOut%d' % break_days
         self.break_days = break_days
         self.break_up = break_up     # True: 向上突破, False: 向下突破
         self.reset()
@@ -213,6 +220,7 @@ class BreakOutStra(object):
 class AvgLineCrossStra(object):
     def __init__(self, avg_days, up_cross_report = True):
         self.name = 'Average Line %d days, %s Cross' % (avg_days, 'Up' if up_cross_report else 'Down')
+        self.abbreviation = 'Avg%d' % avg_days
         self.avg_days = avg_days
         self.up_cross_report = up_cross_report  # True: 上穿, False: 下穿
         self.reset()
@@ -236,6 +244,7 @@ class AvgLineCrossStra(object):
 class TwoAvgLineCrossStra(object):
     def __init__(self, short_days, long_days, up_cross_report = True):
         self.name = 'Average Lines %d days and %d days, %s Cross' % (short_days, long_days, 'Gold' if up_cross_report else 'Dead')
+        self.abbreviation = 'Avg(%d,%d)' % (short_days, long_days)
         self.ema2_param = (short_days, long_days)
         self.up_cross_report = up_cross_report
         self.reset()
@@ -259,6 +268,7 @@ class MacdDeviationStra(object):
     def __init__(self, gold_cross_report = True, short_days = 12, long_days = 26, dif_days = 9, price_dev = (-0.1, 0), dif_dev = 0.5, last_dif = 3):
         self.name = 'MACD (%d, %d, %d) %s Deviation: price range %d%%~%d%%, dif range %d%%, search last %d cross' % (short_days, long_days, dif_days,
                     'Bottom' if gold_cross_report else 'Top', price_dev[0]*100, price_dev[1]*100, dif_dev*100, last_dif)
+        self.abbreviation = 'MACDDev'
         self.macd_para = (short_days, long_days, dif_days)
         self.gold_cross_report = gold_cross_report
         self.price_dev = price_dev

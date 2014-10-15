@@ -50,6 +50,15 @@ class Account(object):
         self.latest_price = {}  # stock_id: (latest time, latest stock price)
         self.total_fee = 0
         self.report = {}
+        
+    def market_value_backoff(self):
+        backoff = []
+        if self.market_value:
+            max_value = self.init_money
+            for v in self.market_value:
+                max_value = max(max_value, v)
+                backoff.append(float(max - v) / max * 100)
+        return backoff
 
     def update(self, tick):
         # tick: (time, [(stock_id, (open, close, high, low, volume)), (stock_id, ()), ...])
@@ -196,6 +205,7 @@ class Account(object):
         self.report['no_fee_total_profit'] = (float(self.market_value[-1] + self.total_fee) / self.init_money - 1) * 100
         self.report['account_total_profit'] = (float(self.market_value[-1]) / self.init_money - 1) * 100
         self.report['account_mean_profit'] = self._divide(self.report['account_total_profit'], len(self.profit))
+        self.report['max_backoff'] = max(self.market_value_backoff())
 
     def show_profit_pdf(self):
         plt.hist(self.all_profit, 100)
@@ -217,6 +227,7 @@ class Account(object):
         s += 'win_lose_profit_ratio: %.1f\n' % self.report['win_lose_profit_ratio']
         s += 'win_lose_stock_ratio: %.1f%%\n' % self.report['win_lose_stock_ratio']
         s += 'max_win: %.1f%%, max_lose: %.1f%%\n' % (self.report['max_win_profit'], self.report['max_lose_profit'])
+        s += 'max_backoff: %.1f%%\n' % self.report['max_backoff']
         s += 'trade_num: %d, avg_hold_days: %.1f\n' % (len(self.profit), np.mean(self.hold_days))
         s += 'total_fee: %d, fee/total_fit: %.1f%%' % (self.total_fee, float(self.total_fee) / self.report['account_profit'] * 100)
         if test_period and trade_stocks:

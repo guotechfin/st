@@ -57,7 +57,7 @@ class Account(object):
             max_value = self.init_money
             for v in self.market_value:
                 max_value = max(max_value, v)
-                backoff.append(float(max - v) / max * 100)
+                backoff.append(float(v - max_value) / max_value * 100)
         return backoff
 
     def update(self, tick):
@@ -83,8 +83,9 @@ class Account(object):
                 stock_num += number
         return stock_num
 
-    def hold_stock_num(self):
-        return len(self.hold_stocks)
+    def get_hold_stocks(self):
+        hold_stocks = [stock_id for stock_id in self.hold_stocks]
+        return hold_stocks
 
     # def buy_sell_stocks(self, oper, today = None):
     #     # oper: [(stock_id, 'buy/sell', price, number), ...]
@@ -205,7 +206,7 @@ class Account(object):
         self.report['no_fee_total_profit'] = (float(self.market_value[-1] + self.total_fee) / self.init_money - 1) * 100
         self.report['account_total_profit'] = (float(self.market_value[-1]) / self.init_money - 1) * 100
         self.report['account_mean_profit'] = self._divide(self.report['account_total_profit'], len(self.profit))
-        self.report['max_backoff'] = max(self.market_value_backoff())
+        self.report['max_backoff'] = min(self.market_value_backoff())
 
     def show_profit_pdf(self):
         plt.hist(self.all_profit, 100)

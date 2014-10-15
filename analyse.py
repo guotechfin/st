@@ -14,8 +14,11 @@ class Analyse(object):
     def __init__(self):
         self.in_market_analyse_days = 60   # 大约3个月
         self.stocks = Stocks()
-        self.stocks.load_data(100)
+        self.stocks.load_data(100)   # 100 stocks
         self.trade_stock_num = len(self.stocks.stock_list) - len(Stock.SPECIAL_LIST)
+
+    def set_period(self, start_time, end_time):
+        pass
 
     def analyse_in_market(self, in_market_stra, selected_stock_id = None):
         result_time = []
@@ -80,26 +83,27 @@ class Analyse(object):
                 analyse.analyse_trade(in_stra, out_stra)
 
     def analyse_real_strategy(self):
-        in_stra_list = [ (ATRTunnelStra, (20, 20, 3, False)),
+        in_stra_list = [ #(ATRTunnelStra, (20, 20, 3, False)),
                          (MacdDeviationStra, ()),
-                         (BreakOutStra, (20,)),
-                         (AvgLineCrossStra, (20,)),
-                         (TwoAvgLineCrossStra, (10, 60)),
+                         #(BreakOutStra, (20,)),
+                         #(AvgLineCrossStra, (20,)),
+                         #(TwoAvgLineCrossStra, (10, 60)),
                          #(RandomStra, (0.3,), (100,)),
-                         (RandomStra, (0.3,)),
+                         #(RandomStra, (0.3,)),
                         ]
 
-        out_stra_list = [ (ATRTunnelStra, (20, 20, 3)),
+        out_stra_list = [ #(ATRTunnelStra, (20, 20, 3)),
                           (MacdDeviationStra, (False,)),
-                          (BreakOutStra, (10, False)),
-                          (AvgLineCrossStra, (20, False)),
-                          (TwoAvgLineCrossStra, (5, 20, False)),
+                          #(BreakOutStra, (10, False)),
+                          #(AvgLineCrossStra, (20, False)),
+                          #(TwoAvgLineCrossStra, (5, 20, False)),
                           (ATRStopLossStra, (20, 2, False)),
                           #(ConstPeriodStra, (1,)),
-                          (ConstPeriodStra, (5,), (20,), (60,)),
+                          #(ConstPeriodStra, (5,), (20,), (60,)),
+                          (ConstPeriodStra, (30,), (60,), (90,)),
                         ]
 
-        buy_stra_list = [ (BuyOneStra, ('random', 1)),
+        buy_stra_list = [ (BuyMultiStra, (20, 'random')),
                         ]
 
         self.market_index = {}
@@ -129,7 +133,7 @@ class Analyse(object):
         # print result
         for r in result:
             s = 'Stra %d, In(%s) Out(%s) Buy(%s): ' % (r[0], self._class_abbreviation(r[1]), self._class_abbreviation(r[2]), self._class_abbreviation(r[3]))
-            s += '(total_profit: %.1f%%, no_fee_profit: %.1f%%, mean_profit: %.1f%%' % r[4]
+            s += '(total_profit: %.1f%%, no_fee_profit: %.1f%%, max_backoff: %.1f%%' % r[4]
             print s
         print ''
 
@@ -181,9 +185,9 @@ class Analyse(object):
         account.summarize()
         total_profit = account.report['account_total_profit']
         no_fee_profit = account.report['no_fee_total_profit']
-        mean_profit = account.report['mean_profit']
+        max_backoff = account.report['max_backoff']
         self._show_account_info(account)
-        return (total_profit, no_fee_profit, mean_profit)
+        return (total_profit, no_fee_profit, max_backoff)
 
     def _show_stra_info(self, in_market_stra_class = None, out_market_stra_class = None, buy_stock_stra_class = None):
         if in_market_stra_class: print 'In Market: ', self._class_name(in_market_stra_class)

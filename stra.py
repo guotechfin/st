@@ -7,7 +7,7 @@ from index import MACD, EMA, EMA2, Cross, LastMaxMin, ATR
 
 class BuyOneStra(object):
     def __init__(self, select = 'random', max_hold_stocks = 0):
-        self.name = 'Buy One At a Time, %s' % select
+        self.name = 'Buy One, %s' % select
         if max_hold_stocks: self.name += ', Max Hold %d Stocks in Account' % max_hold_stocks
         self.abbreviation = 'BuyOne(%s)' % select
         self.select = select  # 'random', 'min', 'max', 'first', 'last'
@@ -18,7 +18,7 @@ class BuyOneStra(object):
         time_, stocks_price = tick
         buy_stocks = []
         in_trigger_num = len(in_trigger_stocks)
-        hold_stock_num = account.hold_stock_num()
+        hold_stock_num = len(account.get_hold_stocks())
         if in_trigger_num and (not self.max_hold_stocks or hold_stock_num < self.max_hold_stocks):
             if self.select == 'random':
                 index = random.randint(0, in_trigger_num - 1)
@@ -40,6 +40,44 @@ class BuyOneStra(object):
                     account.buy_stock(stock_id, price[1], today = time_)   # close as buy price
                     break
             buy_stocks.append(stock_id)
+        return buy_stocks
+
+
+class BuyMultiStra(object):
+    def __init__(self, max_hold_stocks = 5, select = 'random'):
+        self.name = 'Buy Multi, %s' % select
+        if max_hold_stocks: self.name += ', Max Hold %d Stocks in Account' % max_hold_stocks
+        self.abbreviation = 'BuyMuti%d(%s)' % (max_hold_stocks, select)
+        self.select = select  # 'random', 'first'
+        self.max_hold_stocks = max_hold_stocks
+
+    def buy_stock(self, in_trigger_stocks, tick, account):
+        # tick: (time, [(stock_id, (open, close, high, low, volume)), (stock_id, ()), ...])
+        time_, stocks_price = tick
+        buy_stocks = []
+        # never buy stocks in hold
+        hold_stocks = account.get_hold_stocks()
+        for stock_id in hold_stocks:
+            if stock_id in in_trigger_stocks:
+                in_trigger_stocks.remove(stock_id)
+        in_trigger_num = len(in_trigger_stocks)
+        buy_stock_num = min(self.max_hold_stocks - len(hold_stocks), in_trigger_num)
+        if buy_stock_num > 0:
+            for num in range(buy_stock_num):
+                if self.select == 'random':
+                    stock_id = random.choice(in_trigger_stocks)
+                else:
+                    stock_id = in_trigger_stocks[0]
+                buy_stocks.append(stock_id)
+                in_trigger_stocks.remove(stock_id)
+            # buy
+            actual_buy_stock_num = 0
+            for sid, price in stocks_price:
+                if sid in buy_stocks:
+                    money = account.money / (self.max_hold_stocks - len(hold_stocks) - actual_buy_stock_num)
+                    account.buy_stock(sid, price[1], money, today = time_)   # close as buy price
+                    actual_buy_stock_num += 1
+            if buy_stock_num != actual_buy_stock_num: raise Exception('buy stock num %d, while actual %d.' % (buy_stock_num, actual_buy_stock_num))
         return buy_stocks
 
 

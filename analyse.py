@@ -90,21 +90,20 @@ class Analyse(object):
                         ]
 
         out_stra_list = [ #(ATRTunnelStra, (20, 20, 3)),
-                          (MacdDeviationStra, (False,)),
+                          #(MacdDeviationStra, (False,)),
                           #(BreakOutStra, (10, False)),
                           #(AvgLineCrossStra, (20, False)),
                           #(TwoAvgLineCrossStra, (5, 20, False)),
                           (ATRStopLossStra, (20, 2, False)),
                           #(ConstPeriodStra, (1,)),
                           #(ConstPeriodStra, (5,), (20,), (60,)),
-                          (ConstPeriodStra, (30,), (60,), (90,)),
+                          #(ConstPeriodStra, (30,), (60,), (90,)),
                         ]
 
-        buy_stra_list = [ (BuyMultiStra, (20, 'random')),
+        buy_stra_list = [ (BuyMultiStra, (3, 'random')),
                         ]
 
-        start_index = Stock.price_time_index[start_time] if self.test_start_time else 0
-        end_index = Stock.price_time_index[end_index] if self.test_end_time else -1
+        start_index, end_index = self.stocks.set_test_period(start_time, end_time)
         self.market_index = {}
         for stock_id in Stock.SPECIAL_LIST:
             stock = self.stocks.stock_list[stock_id]
@@ -160,7 +159,7 @@ class Analyse(object):
                 hold_stock_days[stock_id] = 0
 
         # tick: (time, [(stock_id, (open, close, high, low, volume)), (stock_id, ()), ...])
-        for tick in self.stocks.iter_ticks(self.test_start_time, self.test_end_time):
+        for tick in self.stocks.iter_ticks():
             time_, stocks_price = tick
             in_trigger_stocks = []
             for stock_id, price in stocks_price:
@@ -227,7 +226,7 @@ class Analyse(object):
         self._show_account_info(account)
 
     def _show_account_info(self, account):
-        #account.show_trade_history()
+        account.show_trade_history()
         print account
         account.show_report(self.stocks.get_period(), self.trade_stock_num)
         s = 'MarketIndex:'
@@ -235,7 +234,7 @@ class Analyse(object):
             s += ' %s: %.1f%%(%.1f~%.1f),' % (stock_id, (float(end_index) / start_index - 1)*100, start_index, end_index)
         print s + '\n'
         #account.show_profit_pdf()
-        #account.show_market_value()
+        account.show_market_value()
 
 
 if __name__ == '__main__':
@@ -281,7 +280,9 @@ if __name__ == '__main__':
         analyse.analyse_strategy()
     elif test == 4:
         analyse = Analyse()
-        analyse.analyse_real_strategy()
+        #analyse.analyse_real_strategy(end_time = 20111231)
+        #analyse.analyse_real_strategy(20120101, 20121231)
+        analyse.analyse_real_strategy(20130101)
 
 
 

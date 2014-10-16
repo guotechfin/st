@@ -4,7 +4,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from stocks import Util, Stocks
-
+from decorator import thread
+import threading
 
 class Account(object):
     def __init__(self, money):

@@ -250,17 +250,18 @@ class Stocks(object):
 
     def set_test_period(self, start_time = None, end_time = None):
         self.test_start_time = self._get_exact_time(start_time, 1) if start_time else Stock.price_time_list[0]
-        self.test_end_time = self._get_exact_time(start_time, -1) if end_time else Stock.price_time_list[-1]
+        self.test_end_time = self._get_exact_time(end_time, -1) if end_time else Stock.price_time_list[-1]
+        self.test_start_index = Stock.price_time_index[self.test_start_time]
+        self.test_end_index = Stock.price_time_index[self.test_end_time]
+        return (self.test_start_index, self.test_end_index)
 
     def get_period(self):
-        start_index = Stock.price_time_index[self.test_start_time]
-        end_index = Stock.price_time_index[self.test_end_time]
-        return (len(Stock.price_time_list[start_index:end_index+1]), Stock.price_time_list[start_index], Stock.price_time_list[end_index])
+        start, end = self.test_start_index, self.test_end_index
+        return (len(Stock.price_time_list[start:end+1]), Stock.price_time_list[start], Stock.price_time_list[end])
 
-    def iter_ticks(self, start_time = None, end_time = None):
-        start_index = Stock.price_time_index[start_time] if start_time else 0
-        end_index = Stock.price_time_index[end_time] if end_time else len(Stock.price_time_list)
-        for time_ in Stock.price_time_list[start_index:end_index]:
+    def iter_ticks(self):
+        start, end = self.test_start_index, self.test_end_index
+        for time_ in Stock.price_time_list[start:end+1]:
             tick_data = []
             for stock_id, stock in self.stock_list.items():
                 tick_data.append(stock.get_tick(time_))

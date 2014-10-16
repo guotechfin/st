@@ -17,9 +17,6 @@ class Analyse(object):
         self.stocks.load_data(100)   # 100 stocks
         self.trade_stock_num = len(self.stocks.stock_list) - len(Stock.SPECIAL_LIST)
 
-    def set_period(self, start_time, end_time):
-        pass
-
     def analyse_in_market(self, in_market_stra, selected_stock_id = None):
         result_time = []
         result_time_stock = {}
@@ -82,7 +79,7 @@ class Analyse(object):
                 stra_index += 1
                 analyse.analyse_trade(in_stra, out_stra)
 
-    def analyse_real_strategy(self):
+    def analyse_real_strategy(self, start_time = None, end_time = None):
         in_stra_list = [ #(ATRTunnelStra, (20, 20, 3, False)),
                          (MacdDeviationStra, ()),
                          #(BreakOutStra, (20,)),
@@ -106,10 +103,12 @@ class Analyse(object):
         buy_stra_list = [ (BuyMultiStra, (20, 'random')),
                         ]
 
+        start_index = Stock.price_time_index[start_time] if self.test_start_time else 0
+        end_index = Stock.price_time_index[end_index] if self.test_end_time else -1
         self.market_index = {}
         for stock_id in Stock.SPECIAL_LIST:
             stock = self.stocks.stock_list[stock_id]
-            self.market_index[stock_id] = (stock.processed_price[0][1], stock.processed_price[-1][1])  # close
+            self.market_index[stock_id] = (stock.processed_price[start_index][1], stock.processed_price[end_index][1])  # close
 
         result = []
         stra_index = 1
@@ -161,7 +160,7 @@ class Analyse(object):
                 hold_stock_days[stock_id] = 0
 
         # tick: (time, [(stock_id, (open, close, high, low, volume)), (stock_id, ()), ...])
-        for tick in self.stocks.iter_ticks():
+        for tick in self.stocks.iter_ticks(self.test_start_time, self.test_end_time):
             time_, stocks_price = tick
             in_trigger_stocks = []
             for stock_id, price in stocks_price:

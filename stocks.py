@@ -230,6 +230,7 @@ class Stocks(object):
         self.stock_list = {}  # stock_id: Stock()
         self.price_time_index = {}  # 'time1': index1 in list
         self.price_time_list = []
+        self.test_start_time = self.test_end_time = None
 
     def __str__(self):
         string = ''
@@ -237,11 +238,29 @@ class Stocks(object):
             string += stock.__str__() + '\n'
         return string
 
-    def get_period(self):
-        return (len(Stock.price_time_list), Stock.price_time_list[0], Stock.price_time_list[-1])
+    def _get_exact_time(self, time_, add_next):
+        digit = Util.time_to_digit(time_)
+        min_d, max_d = [Util.time_to_digit(Stock.price_time_list[i]) for i in [0, -1]]
+        while True:
+            if not min_d <= digit <= max_d: raise Exception('can not find exact time %s, min %s, max %s' % (time_, Stock.price_time_list[0], Stock.price_time_list[-1]))
+            t = Util.digit_to_time(digit)
+            if t in Stock.price_time_index: break
+            digit += add_next
+        return t
 
-    def iter_ticks(self):
-        for time_ in Stock.price_time_list:
+    def set_test_period(self, start_time = None, end_time = None):
+        self.test_start_time = self._get_exact_time(start_time, 1) if start_time else Stock.price_time_list[0]
+        self.test_end_time = self._get_exact_time(start_time, -1) if end_time else Stock.price_time_list[-1]
+
+    def get_period(self):
+        start_index = Stock.price_time_index[self.test_start_time]
+        end_index = Stock.price_time_index[self.test_end_time]
+        return (len(Stock.price_time_list[start_index:end_index+1]), Stock.price_time_list[start_index], Stock.price_time_list[end_index])
+
+    def iter_ticks(self, start_time = None, end_time = None):
+        start_index = Stock.price_time_index[start_time] if start_time else 0
+        end_index = Stock.price_time_index[end_time] if end_time else len(Stock.price_time_list)
+        for time_ in Stock.price_time_list[start_index:end_index]:
             tick_data = []
             for stock_id, stock in self.stock_list.items():
                 tick_data.append(stock.get_tick(time_))

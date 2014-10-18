@@ -3,9 +3,9 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-from stocks import Util, Stocks
+from stocks import Util, Stocks, Stock
 from decorator import thread
-import threading
+
 
 class Account(object):
     def __init__(self, money):
@@ -42,16 +42,37 @@ class Account(object):
         self.money = self.init_money
         self.stocks = []  # stock_id, buy_time, buy_price(元/手), number(手), used_money
         self.hold_stocks = {}   # stock_id: number
-        self.market_time = []
+        self.market_time = []  # 与 market_value 对应
         self.market_value = []
+        self.market_index = {}  # '999999': [index], '399001': [index], '000000': [index]
         self.history = []  # time, buy or sell, stock_id, price, number
         self.profit = []   # sell_time, stock_id, profit
         self.all_profit = []  # profit
         self.hold_days = []  # stock hold days of one trade
         self.latest_price = {}  # stock_id: (latest time, latest stock price)
+        self.first_price = {}  # stock_id: (first time, first stock price)
         self.total_fee = 0
         self.report = {}
-        
+
+    def get_stocks_trade_history(self):
+        #stocks_history: stock_id: ([buy_time, buy_time, ...], [sell_time, sell_time, ...])
+        stocks_history = {}
+        for time_, buy_sell, stock_id, price, number in self.history:
+            if buy_sell == 'buy':
+                if stock_id not in stocks_history: stocks_history[stock_id] = ([], [])
+                stocks_history[stock_id][0].append(time_)
+            else:
+                assert stock_id in stocks_history, 'stock_id: %s not in history' % stock_id
+                stocks_history[stock_id][1].append(time_)
+        stocks_trade_history = {}
+        for stock_id, (buy_history, sell_history) in stocks_history.items():
+            assert len(buy_history) - len(sell_history) in [0,1], 'buy_history: %d, sell_history: %d' % (len(buy_history), len(sell_history))
+            buy_history = buy_history[:len(sell_history)]
+            if buy_history and sell_history:
+                stocks_trade_history[stock_id] = zip(buy_history, sell_history)
+        # stocks_trade_history: stock_id: [(buy_time, sell_time), (buy_time, sell_time), ...]
+        return stocks_trade_history
+
     def market_value_backoff(self):
         backoff = []
         if self.market_value:
@@ -68,6 +89,7 @@ class Account(object):
         for stock_id, price in stocks_price:
             if price:
                 self.latest_price[stock_id] = (time_, price[1])
+                if not stock_id in self.first_price: self.first_price[stock_id] = (time_, price[1])
         stock_num = 0
         for stock_id, (t, c) in self.latest_price.items():
             if stock_id in self.hold_stocks:
@@ -76,6 +98,17 @@ class Account(object):
         if stock_num != len(self.hold_stocks): raise Exception('Account Update Error: hold %d stocks, only find %d stocks in latest price' % (len(self.hold_stocks, stock_num)))
         self.market_time.append(time_)
         self.market_value.append(stocks_value + self.money)
+        for stock_id in Stock.SPECIAL_LIST:
+            if not stock_id in self.market_index: self.market_index[stock_id] = []
+            self.market_index[stock_id].append(self.latest_price[stock_id][1])
+        price_sum = 0
+        for stock_id, (t, c) in self.first_price.items():
+            price_sum += self.latest_price[stock_id][1] / float(c)
+        price_mean = float(price_sum) / len(self.first_price)
+        stock_id = '000000'
+        if not stock_id in self.market_index: self.market_index[stock_id] = []
+        self.market_index[stock_id].append(price_mean)
+
 
     def can_sell_num(self, stock_id, time_ = None):
         stock_num = 0
@@ -215,8 +248,13 @@ class Account(object):
         plt.show()
 
     def show_market_value(self):
+        color = ['r', 'k', 'm', 'y']
         plt.figure()
         plt.plot(self.market_value)
+        for i, stock_id in enumerate(Stock.SPECIAL_LIST.keys() + ['000000']):
+            first = self.market_index[stock_id][0]
+            index = np.array(self.market_index[stock_id]) / float(first) * self.init_money  # 归一
+            plt.plot(index, color[i])
         plt.grid(True)
         plt.show()
 
@@ -233,9 +271,9 @@ class Account(object):
         s += 'trade_num: %d, avg_hold_days: %.1f\n' % (len(self.profit), np.mean(self.hold_days))
         s += 'total_fee: %d, fee/total_fit: %.1f%%' % (self.total_fee, float(self.total_fee) / self.report['account_profit'] * 100)
         if test_period and trade_stocks:
-            days, day_start, day_end = test_period
+            days, day_start, day_stop = test_period
             s += '\ntrade_freq: %.2f%%, total_days: %d, total_stocks: %d\n' % (len(self.profit)*100/float(days), days, trade_stocks)
-            s += 'test from %s to %s' % (day_start, day_end)
+            s += 'test from %s to %s' % (day_start, day_stop)
         print s
 
 class VirtualAccount(object):

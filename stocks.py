@@ -4,7 +4,7 @@
 import gevent, gevent.monkey; gevent.monkey.patch_all()
 import re, struct, urllib2, os, copy, time
 import cPickle as pickle
-from matplotlib import pyplot
+import matplotlib.pyplot as plt
 
 
 class Util(object):
@@ -80,18 +80,16 @@ class Stock(object):
         return [price[1] if price else None for price in price_slice]
 
     def get_interval_price(self, time_start = None, time_stop = None):
-        time_start = time_start or Stock.price_time_list[0]
-        time_stop = time_stop or Stock.price_time_list[-1]
-        start, stop = Util.time_to_digit(time_start), Util.time_to_digit(time_stop)
-        time_interval, interval_history_price, interval_processed_price = [], [], []
-        for digit in range(start, stop+1):
-            time_ = Util.digit_to_time(digit)
-            if time_ in Stock.price_time_index:
-                index = Stock.price_time_index[time_]
-                time_interval.append(time_)
+        start_index = Stock.price_time_index[Stock.get_exact_time(time_start, 1)]
+        stop_index = Stock.price_time_index[Stock.get_exact_time(time_stop, -1)]
+
+        interval_time, interval_history_price, interval_processed_price = [], [], []
+        for index in range(start_index, stop_index+1):
+            if self.processed_price[index]:
+                interval_time.append(Stock.price_time_list[index])
                 interval_history_price.append(self.history_price[index])
                 interval_processed_price.append(self.processed_price[index])
-        return (time_interval, interval_history_price, interval_processed_price)
+        return (interval_time, interval_history_price, interval_processed_price)
 
     @staticmethod
     def _get_html_page(url, timeout = 3, try_times = 5):
@@ -113,6 +111,20 @@ class Stock(object):
         pos = page.find(r'<a name="sz"/>')
         if pos < 0: raise Exception('stock name page fail, cannot find "sz"')
         Stock.stock_name_page = (page[:pos], page[pos:])
+
+    @staticmethod
+    def get_exact_time(time_ = None, add_next = 1):
+        if time_ is None:
+            t = Stock.price_time_list[0] if add_next == 1 else Stock.price_time_list[-1]
+        else:
+            digit = Util.time_to_digit(time_)
+            min_d, max_d = [Util.time_to_digit(Stock.price_time_list[i]) for i in [0, -1]]
+            while True:
+                if not min_d <= digit <= max_d: raise Exception('can not find exact time %s, min %s, max %s' % (time_, Stock.price_time_list[0], Stock.price_time_list[-1]))
+                t = Util.digit_to_time(digit)
+                if t in Stock.price_time_index: break
+                digit += add_next
+        return t
 
     def get_stock_name(self, stock_id):
         ''' return (stock_name, stock_pos_attr) '''
@@ -214,14 +226,32 @@ class Stock(object):
                     processed_price[i][p] = round(float(10* price + place_price * share) / ( 10 + share), 2)
         return processed_price
 
-    def plot(self, time_start = None, time_stop = None):
-        time_interval, interval_history_price, interval_processed_price = self.get_interval_price(time_start, time_stop)
+    def plot(self, time_start = None, time_stop = None, trade_history = None):
+        interval_time, interval_history_price, interval_processed_price = self.get_interval_price(time_start, time_stop)
         #print interval_processed_price
-        close_ = [price[1] for price in interval_processed_price if price]
-        pyplot.figure()
-        pyplot.plot(close_, '*-')
-        pyplot.grid(True)
-        pyplot.show()
+        close_ = [price[1] for price in interval_processed_price]
+        plt.figure()
+        if trade_history:
+            # trade_history: [(time_buy, time_sell), (time_buy, time_sell), ...]
+            trade_time = reduce(lambda x,y:x+list(y), trade_history, [])
+            trade_index = [i for i, time_ in enumerate(interval_time) if time_ in trade_time]
+            # trade_index: [(index_buy, index_sell), (index_buy, index_sell), ...]
+            even_trade_index = [index for i, index in enumerate(trade_index) if i % 2 == 0]
+            odd_trade_index = [index for i, index in enumerate(trade_index) if i % 2 == 1]
+            trade_index = zip(even_trade_index, odd_trade_index)
+            assert len(trade_history) == len(trade_index), 'trade_history: %d, trade_index: %d' % (len(trade_history), len(trade_index))
+            # non_trade_index: [(0, index_buy), (index_sell, index_buy), ..., (index_sell, end)]
+            non_trade_index = zip([0] + odd_trade_index, even_trade_index + [len(interval_time)-1])
+            for start, stop in non_trade_index:
+                if stop > start:
+                    plt.plot(range(start, stop), [close_[i] for i in range(start, stop)], 'b*-')
+            for start, stop in trade_index:
+                if stop > start:
+                    plt.plot(range(start, stop), [close_[i] for i in range(start, stop)], 'r*-')
+        else:
+            plt.plot(close_, '*-')
+        plt.grid(True)
+        plt.show()
 
 
 class Stocks(object):
@@ -230,7 +260,6 @@ class Stocks(object):
         self.stock_list = {}  # stock_id: Stock()
         self.price_time_index = {}  # 'time1': index1 in list
         self.price_time_list = []
-        self.test_start_time = self.test_end_time = None
 
     def __str__(self):
         string = ''
@@ -238,30 +267,18 @@ class Stocks(object):
             string += stock.__str__() + '\n'
         return string
 
-    def _get_exact_time(self, time_, add_next):
-        digit = Util.time_to_digit(time_)
-        min_d, max_d = [Util.time_to_digit(Stock.price_time_list[i]) for i in [0, -1]]
-        while True:
-            if not min_d <= digit <= max_d: raise Exception('can not find exact time %s, min %s, max %s' % (time_, Stock.price_time_list[0], Stock.price_time_list[-1]))
-            t = Util.digit_to_time(digit)
-            if t in Stock.price_time_index: break
-            digit += add_next
-        return t
+    def set_test_period(self, time_start = None, time_stop = None):
+        self.test_index_start = Stock.price_time_index[Stock.get_exact_time(time_start, 1)]
+        self.test_index_stop = Stock.price_time_index[Stock.get_exact_time(time_stop, -1)]
+        return (self.test_index_start, self.test_index_stop)
 
-    def set_test_period(self, start_time = None, end_time = None):
-        self.test_start_time = self._get_exact_time(start_time, 1) if start_time else Stock.price_time_list[0]
-        self.test_end_time = self._get_exact_time(end_time, -1) if end_time else Stock.price_time_list[-1]
-        self.test_start_index = Stock.price_time_index[self.test_start_time]
-        self.test_end_index = Stock.price_time_index[self.test_end_time]
-        return (self.test_start_index, self.test_end_index)
-
-    def get_period(self):
-        start, end = self.test_start_index, self.test_end_index
-        return (len(Stock.price_time_list[start:end+1]), Stock.price_time_list[start], Stock.price_time_list[end])
+    def get_test_period(self):
+        start, stop = self.test_index_start, self.test_index_stop
+        return (len(Stock.price_time_list[start:stop+1]), Stock.price_time_list[start], Stock.price_time_list[stop])
 
     def iter_ticks(self):
-        start, end = self.test_start_index, self.test_end_index
-        for time_ in Stock.price_time_list[start:end+1]:
+        start, stop = self.test_index_start, self.test_index_stop
+        for time_ in Stock.price_time_list[start:stop+1]:
             tick_data = []
             for stock_id, stock in self.stock_list.items():
                 tick_data.append(stock.get_tick(time_))

@@ -106,6 +106,46 @@ class StraTrigger(object):
        if 'start_monitor' in dir(self.out_stra):
             self.out_stra.start_monitor()
 
+    def quit_market(self):
+        if 'start_monitor' in dir(self.in_stra):
+            self.in_stra.start_monitor()
+
+
+class MultiStra(object):
+    def __init__(self, stra_class_list, or_ = True):
+        stra_list = [self._class_instance(c) for c in stra_class_list]
+        self.name = 'MultiStra(%d):' % len(stra_list)
+        self.abbreviation = 'Multi%d:' % len(stra_list)
+        for stra in stra_list:
+            self.name += '\n%s%s' % (' '*15, stra.name)
+            self.abbreviation += stra.abbreviation + ','
+        self.stra_list = stra_list
+        self.or_ = or_
+        self.reset()
+
+    def _class_instance(self, class_param_tuple):
+        class_, param = class_param_tuple
+        return class_(*param)
+
+    def reset(self):
+        for stra in self.stra_list:
+            stra.reset()
+
+    def start_monitor(self):
+        for stra in self.stra_list:
+            if 'start_monitor' in dir(stra):
+                stra.start_monitor()
+
+    def update(self, price):
+        trigger = []
+        for stra in self.stra_list:
+            trigger.append(stra.update(price))
+        if self.or_:
+            in_market_trigger = reduce(lambda x,y: x or y, trigger, False)
+        else:
+            in_market_trigger = reduce(lambda x,y: x and y, trigger, True)
+        return in_market_trigger
+
 
 class RandomStra(object):
     def __init__(self, probability, direction_up = True):
@@ -232,6 +272,37 @@ class ATRStopLossStra(object):
         return in_market_trigger
 
 
+class BreakOutBackOffStra(object):
+    def __init__(self, break_days, back_days, break_up = True):
+        self.name = 'BreakOut %d days With BackOff %d days, %s' % (break_days, back_days, 'Up' if break_up else 'Down')
+        self.abbreviation = 'BreakOut%dBack%d' % (break_days, back_days)
+        self.break_days = break_days
+        self.back_days = back_days
+        self.break_up = break_up     # True: 向上突破, False: 向下突破
+        self.backoff_up = not break_up
+        self.reset()
+
+    def reset(self):
+        self.breakout = BreakOutStra(self.break_days, self.break_up)
+        self.status_breakout = False
+
+    def start_monitor(self):
+        self.status_breakout = False
+
+    def update(self, price):  # [open, close, high, low]
+        in_market_trigger = False
+        if price:
+            o, c, h, l = price
+            trigger = self.breakout.update(price)
+            if trigger:
+                self.status_breakout = True
+                self.last_max_min = LastMaxMin(self.break_days, self.backoff_up)
+            elif self.status_breakout:
+                value = self.last_max_min.update(price)
+                if value and ((c > value and self.backoff_up) or (c < value and not self.backoff_up)):
+                    in_market_trigger = True
+        return in_market_trigger
+
 # 突破
 class BreakOutStra(object):
     def __init__(self, break_days, break_up = True):
@@ -248,7 +319,7 @@ class BreakOutStra(object):
         in_market_trigger = False
         if price:
             o, c, h, l = price
-            value = self.last_max_min.update(c)
+            value = self.last_max_min.update(price)
             if value and ((c > value and self.break_up) or (c < value and not self.break_up)):
                 in_market_trigger = True
         return in_market_trigger

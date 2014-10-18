@@ -81,8 +81,9 @@ class Analyse(object):
 
     def analyse_real_strategy(self, start_time = None, end_time = None):
         in_stra_list = [ #(ATRTunnelStra, (20, 20, 3, False)),
-                         (MacdDeviationStra, ()),
+                         #(MacdDeviationStra, ()),
                          #(BreakOutStra, (20,)),
+                         (BreakOutBackOffStra, (20, 5)),
                          #(AvgLineCrossStra, (20,)),
                          #(TwoAvgLineCrossStra, (10, 60)),
                          #(RandomStra, (0.3,), (100,)),
@@ -98,6 +99,8 @@ class Analyse(object):
                           #(ConstPeriodStra, (1,)),
                           #(ConstPeriodStra, (5,), (20,), (60,)),
                           #(ConstPeriodStra, (30,), (60,), (90,)),
+                          #(MultiStra, ([(MacdDeviationStra, (False,)), (ATRStopLossStra, (20, 2, False))],)),
+                          #(MultiStra, ([(ATRStopLossStra, (20, 2, False))],)),
                         ]
 
         buy_stra_list = [ (BuyMultiStra, (3, 'random')),
@@ -185,6 +188,7 @@ class Analyse(object):
         no_fee_profit = account.report['no_fee_total_profit']
         max_backoff = account.report['max_backoff']
         self._show_account_info(account)
+        self._show_stock_trade(account)
         return (total_profit, no_fee_profit, max_backoff)
 
     def _show_stra_info(self, in_market_stra_class = None, out_market_stra_class = None, buy_stock_stra_class = None):
@@ -228,13 +232,22 @@ class Analyse(object):
     def _show_account_info(self, account):
         account.show_trade_history()
         print account
-        account.show_report(self.stocks.get_period(), self.trade_stock_num)
+        account.show_report(self.stocks.get_test_period(), self.trade_stock_num)
         s = 'MarketIndex:'
         for stock_id, (start_index, end_index) in self.market_index.items():
             s += ' %s: %.1f%%(%.1f~%.1f),' % (stock_id, (float(end_index) / start_index - 1)*100, start_index, end_index)
         print s + '\n'
         #account.show_profit_pdf()
-        account.show_market_value()
+        #account.show_market_value()
+
+    def _show_stock_trade(self, account, stock_id = None):
+        days, day_start, day_stop = self.stocks.get_test_period()
+        stocks_trade_history = account.get_stocks_trade_history()
+        print stocks_trade_history
+        stock_id = stock_id or list(stocks_trade_history.keys())[0]
+        print stock_id
+        stock = self.stocks.stock_list[stock_id]
+        stock.plot(day_start, day_stop, trade_history = stocks_trade_history[stock_id])
 
 
 if __name__ == '__main__':
@@ -280,9 +293,11 @@ if __name__ == '__main__':
         analyse.analyse_strategy()
     elif test == 4:
         analyse = Analyse()
-        #analyse.analyse_real_strategy(end_time = 20111231)
+        #analyse.analyse_real_strategy(end_time = 20100710)
         #analyse.analyse_real_strategy(20120101, 20121231)
-        analyse.analyse_real_strategy(20130101)
+        #analyse.analyse_real_strategy(20130101)
+        analyse.analyse_real_strategy()
+
 
 
 

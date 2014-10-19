@@ -92,18 +92,18 @@ class Analyse(object):
 
         out_stra_list = [ #(ATRTunnelStra, (20, 20, 3)),
                           #(MacdDeviationStra, (False,)),
-                          #(BreakOutStra, (10, False)),
+                          (BreakOutStra, (10, False)),
                           #(AvgLineCrossStra, (20, False)),
                           #(TwoAvgLineCrossStra, (5, 20, False)),
-                          (ATRStopLossStra, (20, 2, False)),
-                          #(ConstPeriodStra, (1,)),
+                          #(ATRStopLossStra, (20, 2, False)),
+                          #(ConstPeriodStra, (10,)),
                           #(ConstPeriodStra, (5,), (20,), (60,)),
                           #(ConstPeriodStra, (30,), (60,), (90,)),
                           #(MultiStra, ([(MacdDeviationStra, (False,)), (ATRStopLossStra, (20, 2, False))],)),
                           #(MultiStra, ([(ATRStopLossStra, (20, 2, False))],)),
                         ]
 
-        buy_stra_list = [ (BuyMultiStra, (3, 'random')),
+        buy_stra_list = [ (BuyMultiStra, (1, 'first')),
                         ]
 
         start_index, end_index = self.stocks.set_test_period(start_time, end_time)
@@ -244,6 +244,7 @@ class Analyse(object):
         days, day_start, day_stop = self.stocks.get_test_period()
         stocks_trade_history = account.get_stocks_trade_history()
         print stocks_trade_history
+        stock_id = account.history[4][2]
         stock_id = stock_id or list(stocks_trade_history.keys())[0]
         print stock_id
         stock = self.stocks.stock_list[stock_id]
@@ -295,8 +296,8 @@ if __name__ == '__main__':
         analyse = Analyse()
         #analyse.analyse_real_strategy(end_time = 20100710)
         #analyse.analyse_real_strategy(20120101, 20121231)
-        #analyse.analyse_real_strategy(20130101)
-        analyse.analyse_real_strategy()
+        analyse.analyse_real_strategy(20140101)
+        #analyse.analyse_real_strategy()
 
 
 

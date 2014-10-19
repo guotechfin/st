@@ -244,10 +244,10 @@ class Stock(object):
             non_trade_index = zip([0] + odd_trade_index, even_trade_index + [len(interval_time)-1])
             for start, stop in non_trade_index:
                 if stop > start:
-                    plt.plot(range(start, stop), [close_[i] for i in range(start, stop)], 'b*-')
+                    plt.plot(range(start, stop+1), [close_[i] for i in range(start, stop+1)], 'b*-')
             for start, stop in trade_index:
                 if stop > start:
-                    plt.plot(range(start, stop), [close_[i] for i in range(start, stop)], 'r*-')
+                    plt.plot(range(start, stop+1), [close_[i] for i in range(start, stop+1)], 'r*-')
         else:
             plt.plot(close_, '*-')
         plt.grid(True)

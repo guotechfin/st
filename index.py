@@ -2,6 +2,39 @@
 # -*- coding: utf-8 -*-
 
 
+import numpy as np
+from stocks import Stock
+
+
+# Absolute market index
+class AMI(object):
+    def __init__(self):
+        self.close_latest = 1
+        self.stocks_latest_price = {}   # stock_id: close
+        self.ami_time = []
+        self.ami_history = []
+
+    # tick: (time, [(stock_id, (open, close, high, low, volume)), (stock_id, ()), ...])
+    def update(self, tick):
+        index_value = None
+        price_raise = [[] for i in range(4)]
+        time_, stocks_price = tick
+        for stock_id, price in stocks_price:
+            if price:
+                o, c, h, l = price
+                if stock_id not in Stock.SPECIAL_LIST:
+                    if stock_id in self.stocks_latest_price:
+                        for i, p_new in enumerate(price):
+                            price_raise[i].append(float(p_new) / self.stocks_latest_price[stock_id] - 1)
+                    self.stocks_latest_price[stock_id] = c
+        if price_raise[0]:
+            index_value = tuple([(np.mean(p) + 1) * self.close_latest for p in price_raise])
+            self.ami_time.append(time_)
+            self.ami_history.append(index_value)
+            self.close_latest = index_value[1]
+        return index_value
+
+
 class TR(object):
     def __init__(self):
         self.close = None

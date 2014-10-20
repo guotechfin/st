@@ -296,7 +296,7 @@ class BreakOutBackOffStra(object):
             trigger = self.breakout.update(price)
             if trigger:
                 self.status_breakout = True
-                self.last_max_min = LastMaxMin(self.break_days, self.backoff_up)
+                self.last_max_min = LastMaxMin(self.back_days, self.backoff_up)
             elif self.status_breakout:
                 value = self.last_max_min.update(price)
                 if value and ((c > value and self.backoff_up) or (c < value and not self.backoff_up)):

@@ -7,6 +7,7 @@ import copy
 
 from stocks import Util, Stocks, Stock
 from stra import *
+from index import AMI
 from account import VirtualAccount, Account
 
 
@@ -16,70 +17,9 @@ class Analyse(object):
         self.stocks = Stocks()
         self.stocks.load_data(100)   # 100 stocks
         self.trade_stock_num = len(self.stocks.stock_list) - len(Stock.SPECIAL_LIST)
+        self.ami = AMI()
 
-    def analyse_in_market(self, in_market_stra, selected_stock_id = None):
-        result_time = []
-        result_time_stock = {}
-        result_price_change = []
-        for stock_id, stock in self.stocks.stock_list.items():
-            #print stock_id
-            if selected_stock_id == stock_id or not selected_stock_id:
-                in_market_stra.reset()
-                # 选定满足策略的入市时间
-                for time_, price in stock.iter_tick():
-                    if in_market_stra.update(price):
-                        result_time.append(time_)
-                        if stock_id not in result_time_stock: result_time_stock[stock_id] = []
-                        result_time_stock[stock_id].append(time_)
-                        # 根据每个入市时间，统计入市后的每日涨幅(相比入市点)
-                        timeslice_price = stock.get_timeslice_close_price(time_, self.in_market_analyse_days)
-                        start_price = timeslice_price[0]
-                        result_price_change.append([100*(price/float(start_price)-1) if price else None for price in timeslice_price])
-        price_len = len(result_price_change)
-        result = []
-        for price in zip(*result_price_change):
-            assert len(price) == price_len, 'price error'
-            price_set = set(price)
-            if None in price_set: price_set.remove(None)
-            price_array = np.array(tuple(price_set))
-            # 求平均值和方差
-            result.append((round(np.mean(price_array), 2), round(np.std(price_array), 2)))
-        for stock_id, time_list in result_time_stock.items():
-            print stock_id
-            print time_list
-        return result, result_time
-
-    def analyse_strategy(self):
-        in_stra_list = [ ATRTunnelStra(20, 20, 3, False),
-                         #MacdDeviationStra(),
-                         #BreakOutStra(20),
-                         #AvgLineCrossStra(20),
-                         #TwoAvgLineCrossStra(10, 60),
-                         #RandomStra(0.3),
-                        ]
-
-        out_stra_list = [ ATRTunnelStra(20, 20, 3),
-                          #MacdDeviationStra(gold_cross_report = False),
-                          #BreakOutStra(10, False),
-                          #AvgLineCrossStra(20, False),
-                          #TwoAvgLineCrossStra(5, 20, False),
-                          ATRStopLossStra(20, 2, False),
-                          ConstPeriodStra(5), ConstPeriodStra(20), ConstPeriodStra(60),
-                        ]
-
-        self.market_index = {}
-        for stock_id in Stock.SPECIAL_LIST:
-            stock = self.stocks.stock_list[stock_id]
-            self.market_index[stock_id] = (stock.processed_price[0][1], stock.processed_price[-1][1])  # close
-
-        stra_index = 1
-        for in_stra in in_stra_list:
-            for out_stra in out_stra_list:
-                print 'Stra %d' % stra_index, '#' * 20, '\n'
-                stra_index += 1
-                analyse.analyse_trade(in_stra, out_stra)
-
-    def analyse_real_strategy(self, start_time = None, end_time = None, selected_stock_id = None):
+    def analyse_trade_time_strategy(self, start_time = None, end_time = None):
         in_stra_list = [ #(ATRTunnelStra, (20, 20, 3, False)),
                          #(MacdDeviationStra, ()),
                          #(BreakOutStra, (20,)),
@@ -149,12 +89,17 @@ class Analyse(object):
     def _class_abbreviation(self, class_param_tuple):
         return self._class_instance(class_param_tuple).abbreviation
 
-    def analyse_real_trade(self, in_market_stra_class, out_market_stra_class, buy_stock_stra_class, selected_stock_id = None):
+    def trade_strategy(self, in_market_stra_class, out_market_stra_class, buy_stock_stra_class):
+        # tick: (time, [(stock_id, (open, close, high, low, volume)), (stock_id, ()), ...])
+        for tick in self.stocks.iter_ticks():
+            ami = self.ami.update(tick)
+            time_, stocks_price = tick
+            # here???
+
+    def analyse_trade(self, in_market_stra_class, out_market_stra_class, buy_stock_stra_class):
         market_trigger = {}
         market_status_in_market = {}
         hold_stock_days = {}
-
-        if selected_stock_id and not isinstance(selected_stock_id, list): selected_stock_id = [selected_stock_id]
 
         buy_stra = self._class_instance(buy_stock_stra_class)
         account = Account(50000)  # initial money
@@ -200,38 +145,6 @@ class Analyse(object):
         if out_market_stra_class: print 'Out Market: ', self._class_name(out_market_stra_class)
         if buy_stock_stra_class: print 'Select Stock: ', self._class_name(buy_stock_stra_class)
         print ''
-
-    def analyse_trade(self, in_market_stra, out_market_stra, selected_stock_id = None):
-        account = VirtualAccount()
-        self.trade_stocks = 0
-        for stock_id, stock in self.stocks.stock_list.items():
-            #print stock_id
-            if (selected_stock_id == stock_id or not selected_stock_id) and stock_id not in Stock.SPECIAL_LIST:
-                in_market_stra.reset()
-                out_market_stra.reset()
-                market_status_in_market = False
-                hold_stock_days = 0
-                self.trade_stocks += 1
-                # 选定满足策略的入市时间
-                for time_, price in stock.iter_tick():
-                    in_market_trigger = in_market_stra.update(price)
-                    out_market_trigger = out_market_stra.update(price)
-                    if not market_status_in_market:  # 不在市场内, 寻找入市机会
-                        if in_market_trigger:
-                            account.buy_stock(stock_id, price[1], today = time_)  # close价格作为买入, 卖出价
-                            market_status_in_market = True
-                            if 'start_monitor' in dir(out_market_stra):
-                                out_market_stra.start_monitor()
-                            hold_stock_days = 0
-                    else:
-                        if price: hold_stock_days += 1
-                        if out_market_trigger:
-                            account.sell_stock(stock_id, price[1], today = time_, hold_stock_days = hold_stock_days)
-                            market_status_in_market = False
-                            if 'start_monitor' in dir(in_market_stra):
-                                in_market_stra.start_monitor()
-        self._show_stra_info(in_market_stra, out_market_stra)
-        self._show_account_info(account)
 
     def _show_account_info(self, account):
         account.show_trade_history()

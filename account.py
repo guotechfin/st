@@ -269,7 +269,7 @@ class Account(object):
         s += 'max_win: %.1f%%, max_lose: %.1f%%\n' % (self.report['max_win_profit'], self.report['max_lose_profit'])
         s += 'max_backoff: %.1f%%\n' % self.report['max_backoff']
         s += 'trade_num: %d, avg_hold_days: %.1f\n' % (len(self.profit), np.mean(self.hold_days))
-        s += 'total_fee: %d, fee/total_fit: %.1f%%' % (self.total_fee, float(self.total_fee) / self.report['account_profit'] * 100)
+        s += 'total_fee: %d, fee/total_fit: %.1f%%' % (self.total_fee, self._divide(self.total_fee, self.report['account_profit']) * 100)
         if test_period and trade_stocks:
             days, day_start, day_stop = test_period
             s += '\ntrade_freq: %.2f%%, total_days: %d, total_stocks: %d\n' % (len(self.profit)*100/float(days), days, trade_stocks)

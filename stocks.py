@@ -122,7 +122,7 @@ class Stock(object):
             while True:
                 if not min_d <= digit <= max_d: raise Exception('can not find exact time %s, min %s, max %s' % (time_, Stock.price_time_list[0], Stock.price_time_list[-1]))
                 t = Util.digit_to_time(digit)
-                if t in Stock.price_time_index: break
+                if t in Stock.price_time_list: break
                 digit += add_next
         return t
 
@@ -344,7 +344,7 @@ class Stocks(object):
 
 
 if __name__ == '__main__':
-    test = 2
+    test = 6
     if test == 0:
         dividend = Dividend()
         for stock_id in ['%06d' % i for i in range(20)]:

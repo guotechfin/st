@@ -35,6 +35,34 @@ class AMI(object):
         return index_value
 
 
+class KDJ(object):
+    def __init__(self, avg_days):
+        self.avg_days = avg_days
+        self.days = 0
+        self.p_high = []
+        self.p_low = []
+        self.K = 50
+        self.D = 50
+
+    def update(self, price):
+        kdj = None
+        if not price is None:
+            o, c, h, l = price
+            self.days += 1
+            if self.days > self.avg_days:
+                self.p_high.pop(0)
+                self.p_low.pop(0)
+            self.p_high.append(h)
+            self.p_low.append(l)
+            if self.days >= self.avg_days:
+                rsv = float(c - min(self.p_low)) / (max(self.p_high) - min(self.p_low)) * 100
+                self.K = float(2 * self.K + rsv) / 3
+                self.D = float(2 * self.D + self.K) / 3
+                J = 3 * self.K - 2 * self.D
+                kdj = (self.K, self.D, J)
+        return kdj
+
+
 class TR(object):
     def __init__(self):
         self.close = None

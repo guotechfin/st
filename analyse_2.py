@@ -19,33 +19,25 @@ class Analyse(object):
         self.trade_stock_num = len(self.stocks.stock_list) - len(Stock.SPECIAL_LIST)
         self.ami = AMI()
 
-    def analyse_trade_time_strategy(self, start_time = None, end_time = None):
-        in_stra_list = [ #(ATRTunnelStra, (20, 20, 3, False)),
-                         #(MacdDeviationStra, ()),
-                         #(BreakOutStra, (20,)),
-                         #(BreakOutBackOffStra, (20, 3)),
-                         #(AvgLineCrossStra, (20,)),
-                         (TwoAvgLineCrossStra, (10, 60)),
-                         #(RandomStra, (0.3,), (100,)),
-                         #(RandomStra, (0.3,)),
+    def analyse_strategy(self, start_time = None, end_time = None):
+        in_stra_list = [ #ATRTunnelStra(20, 20, 3, False),
+                         MacdDeviationStra(),
+                         #BreakOutStra(20),
+                         #AvgLineCrossStra(20),
+                         #TwoAvgLineCrossStra(10, 60),
+                         #RandomStra(0.3),
                         ]
 
-        out_stra_list = [ #(ATRTunnelStra, (20, 20, 3)),
-                          #(MacdDeviationStra, (False,)),
-                          #(BreakOutStra, (10, False)),
-                          #(AvgLineCrossStra, (20, False)),
-                          #(TwoAvgLineCrossStra, (12, 26, False)),
-                          (ATRStopLossStra, (20, 2, False)),
-                          #(ConstPeriodStra, (10,)),
-                          #(ConstPeriodStra, (5,), (20,), (60,)),
-                          #(ConstPeriodStra, (30,), (60,), (90,)),
-                          #(MultiStra, ([(MacdDeviationStra, (False,)), (ATRStopLossStra, (20, 2, False))],)),
-                          #(MultiStra, ([(TwoAvgLineCrossStra, (10, 60, False)), (ATRStopLossStra, (20, 2, False))],)),
+        out_stra_list = [ #ATRTunnelStra(20, 20, 3),
+                          #MacdDeviationStra(gold_cross_report = False),
+                          #BreakOutStra(10, False),
+                          #AvgLineCrossStra(20, False),
+                          #TwoAvgLineCrossStra(5, 20, False),
+                          ATRStopLossStra(20, 2, False),
+                          ConstPeriodStra(5), ConstPeriodStra(20), ConstPeriodStra(60),
                         ]
 
-        buy_stra_list = [ #(BuyMultiStra, (1, 'first')),
-                          (BuyMultiStra, (1, 'random')),
-                        ]
+        stock_list = ['999999', '399001']
 
         start_index, end_index = self.stocks.set_test_period(start_time, end_time)
         self.market_index = {}
@@ -55,82 +47,47 @@ class Analyse(object):
 
         result = []
         stra_index = 1
-        for in_stra_class in in_stra_list:
-            in_stra = [(in_stra_class[0], param) for param in in_stra_class[1:]]
+        for in_stra in in_stra_list:
+            for out_stra in out_stra_list:
+                print 'Stra %d' % stra_index, '#' * 20, '\n'
+                self._show_stra_info(in_stra, out_stra)
+                for stock in stock_list:
+                    p = analyse.analyse_trade_stock(in_stra, out_stra, stock)
+                    result.append((stra_index, in_stra.abbreviation, out_stra.abbreviation, stock, p))
+                stra_index += 1
 
-            for in_market_stra in in_stra:
-                for out_stra_class in out_stra_list:
-                    out_stra = [(out_stra_class[0], param) for param in out_stra_class[1:]]
-
-                    for out_market_stra in out_stra:
-                        for buy_stra_class in buy_stra_list:
-                            buy_stra = [(buy_stra_class[0], param) for param in buy_stra_class[1:]]
-
-                            for buy_stock_stra in buy_stra:
-                                print 'Stra %d' % stra_index, '#' * 20, '\n'
-                                self._show_stra_info(in_market_stra, out_market_stra, buy_stock_stra)
-                                p = analyse.analyse_real_trade(in_market_stra, out_market_stra, buy_stock_stra, selected_stock_id)
-                                result.append((stra_index, in_market_stra, out_market_stra, buy_stock_stra, p))
-                                stra_index += 1
         # print result
         for r in result:
-            s = 'Stra %d, In(%s) Out(%s) Buy(%s): ' % (r[0], self._class_abbreviation(r[1]), self._class_abbreviation(r[2]), self._class_abbreviation(r[3]))
+            s = 'Stra %d, In(%s) Out(%s) Stock(%s): ' % tuple(r[:4])
             s += '(total_profit: %.1f%%, no_fee_profit: %.1f%%, max_backoff: %.1f%%' % r[4]
             print s
         print ''
 
-    def _class_instance(self, class_param_tuple):
-        class_, param = class_param_tuple
-        return class_(*param)
-
-    def _class_name(self, class_param_tuple):
-        return self._class_instance(class_param_tuple).name
-
-    def _class_abbreviation(self, class_param_tuple):
-        return self._class_instance(class_param_tuple).abbreviation
-
-    def trade_strategy(self, in_market_stra_class, out_market_stra_class, buy_stock_stra_class):
-        # tick: (time, [(stock_id, (open, close, high, low, volume)), (stock_id, ()), ...])
-        for tick in self.stocks.iter_ticks():
-            ami = self.ami.update(tick)
-            time_, stocks_price = tick
-            # here???
-
-    def analyse_trade(self, in_market_stra_class, out_market_stra_class, buy_stock_stra_class):
-        market_trigger = {}
-        market_status_in_market = {}
-        hold_stock_days = {}
-
-        buy_stra = self._class_instance(buy_stock_stra_class)
-        account = Account(50000)  # initial money
-        for stock_id in self.stocks.stock_list:
-            if stock_id not in Stock.SPECIAL_LIST:
-                market_trigger[stock_id] = StraTrigger(self._class_instance(in_market_stra_class), self._class_instance(out_market_stra_class))
-                market_status_in_market[stock_id] = False
-                hold_stock_days[stock_id] = 0
+    def analyse_trade_stock(self, in_market_stra, out_market_stra, stock_id = '999999'):
+        account = Account(50000*1000)  # initial money
+        market_trigger = StraTrigger(in_market_stra, out_market_stra)
+        market_status_in_market = False
+        hold_stock_days = 0
 
         # tick: (time, [(stock_id, (open, close, high, low, volume)), (stock_id, ()), ...])
         for tick in self.stocks.iter_ticks():
             time_, stocks_price = tick
-            in_trigger_stocks = []
-            for stock_id, price in stocks_price:
-                if stock_id not in Stock.SPECIAL_LIST and (not selected_stock_id or stock_id in selected_stock_id):
-                    in_market_trigger, out_market_trigger = market_trigger[stock_id].update(price)
-                    if in_market_trigger:
-                        in_trigger_stocks.append(stock_id)
-                    # deal with sell first
-                    if market_status_in_market[stock_id]:   # have the stock
-                        if price: hold_stock_days[stock_id] += 1
+            for sid, price in stocks_price:
+                if sid == stock_id:
+                    in_market_trigger, out_market_trigger = market_trigger.update(price)
+                    if not market_status_in_market:  # 不在市场内, 寻找入市机会
+                        if in_market_trigger:
+                            account.buy_stock(stock_id, price[1], today = time_)  # close价格作为买入, 卖出价
+                            market_status_in_market = True
+                            market_trigger.enter_market()
+                            hold_stock_days = 0
+                    else:
+                        if price: hold_stock_days += 1
                         if out_market_trigger:
-                            account.sell_stock(stock_id, price[1], today = time_, hold_stock_days = hold_stock_days[stock_id])
-                            market_status_in_market[stock_id] = False
-                            market_trigger[stock_id].quit_market()
-            # deal with buy
-            buy_stocks = buy_stra.buy_stock(in_trigger_stocks, tick, account)
-            for stock_id in buy_stocks:
-                market_status_in_market[stock_id] = True
-                hold_stock_days[stock_id] = 0
-                market_trigger[stock_id].enter_market()
+                            account.sell_stock(stock_id, price[1], today = time_, hold_stock_days = hold_stock_days)
+                            market_status_in_market = False
+                            market_trigger.quit_market()
+                break
             account.update(tick)
         account.summarize()
         total_profit = account.report['account_total_profit']
@@ -140,10 +97,9 @@ class Analyse(object):
         #self._show_stock_trade(account)
         return (total_profit, no_fee_profit, max_backoff)
 
-    def _show_stra_info(self, in_market_stra_class = None, out_market_stra_class = None, buy_stock_stra_class = None):
-        if in_market_stra_class: print 'In Market: ', self._class_name(in_market_stra_class)
-        if out_market_stra_class: print 'Out Market: ', self._class_name(out_market_stra_class)
-        if buy_stock_stra_class: print 'Select Stock: ', self._class_name(buy_stock_stra_class)
+    def _show_stra_info(self, in_stra = None, out_stra = None):
+        if in_stra: print 'In Market: ', in_stra.name
+        if out_stra: print 'Out Market: ', out_stra.name
         print ''
 
     def _show_account_info(self, account):
@@ -169,7 +125,7 @@ class Analyse(object):
 
 
 if __name__ == '__main__':
-    test = 4
+    test = 3
     if test == 1:
         analyse = Analyse()
         #stra = RaiseBigStra(9)  # 8% raise

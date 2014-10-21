@@ -85,6 +85,11 @@ class StraTrigger(object):
     def __init__(self, in_stra, out_stra):
         self.in_stra = in_stra
         self.out_stra = out_stra
+        self.reset()
+        
+    def reset(self):
+        self.in_stra.reset()
+        self.out_stra.reset()
         self.in_market = False
 
     def update(self, price):
